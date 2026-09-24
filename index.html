@@ -1,0 +1,1006 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>주소QR 데모</title>
+<style>
+:root{
+  --navy:#1e3a8a; --navy-d:#152a63; --ink:#1a1a1a; --sub:#666;
+  --bg:#f3f5f9; --card:#fff; --line:#e3e6ed; --red:#d1341c; --green:#1a7a3c;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;}
+.app{max-width:480px;margin:0 auto;min-height:100vh;min-height:100dvh;background:var(--card);
+  box-shadow:0 0 24px rgba(0,0,0,.08);position:relative;
+  padding-bottom:calc(24px + env(safe-area-inset-bottom))}
+.banner{background:#fff3cd;color:#7a5c00;font-size:11.5px;padding:8px 14px;text-align:center;border-bottom:1px solid #f0d98a}
+.header{background:var(--navy);color:#fff;
+  padding:calc(16px + env(safe-area-inset-top)) 18px 20px}
+.header .top{display:flex;justify-content:space-between;align-items:center;font-size:12px;opacity:.85;margin-bottom:10px}
+.header select{background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:6px;padding:3px 6px;font-size:12px}
+.addr-row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.addr{font-size:20px;font-weight:700;line-height:1.35}
+.addr .city{font-size:13px;font-weight:400;opacity:.85;display:block;margin-bottom:2px}
+.tts-btn{flex-shrink:0;width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,.15);
+  border:1px solid rgba(255,255,255,.35);color:#fff;font-size:18px;cursor:pointer;display:flex;
+  align-items:center;justify-content:center}
+.tts-btn.playing{background:#fff;color:var(--navy)}
+.gps-row{display:flex;align-items:center;gap:8px;margin-top:10px;flex-wrap:wrap}
+.gps-btn{flex-shrink:0;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.35);
+  color:#fff;font-size:12.5px;font-weight:700;padding:7px 12px;border-radius:20px;cursor:pointer}
+.gps-btn.on{background:#fff;color:var(--navy)}
+.gps-btn:disabled{opacity:.6;cursor:default}
+.gps-status{font-size:11px;opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sos{display:flex;gap:10px;padding:14px 18px;border-bottom:1px solid var(--line)}
+.sos a{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:12px 0;
+  border-radius:10px;text-decoration:none;font-weight:700;font-size:15px;color:#fff}
+.sos .police{background:#2255aa}
+.sos .fire{background:var(--red)}
+.warn{font-size:10.5px;color:var(--sub);text-align:center;padding:0 18px 10px}
+.tabs{display:flex;border-bottom:1px solid var(--line)}
+.tabs button{flex:1;padding:12px 0;border:none;background:none;font-size:14.5px;color:var(--sub);
+  font-weight:600;cursor:pointer;border-bottom:2px solid transparent}
+.tabs button.active{color:var(--navy);border-color:var(--navy)}
+.panel{display:none;padding:14px 16px}
+.panel.active{display:block}
+#mapCanvas,#mapCanvas2{width:100%;height:220px;border-radius:12px;background:#dce7f0}
+#mapCanvas2{height:180px}
+.leaflet-container{border-radius:12px;font-family:inherit}
+.radius-label{background:#1e3a8a;color:#fff;border:none;font-size:11px;font-weight:700;
+  padding:2px 8px;border-radius:10px;box-shadow:0 1px 4px rgba(0,0,0,.25)}
+.radius-label::before{border-right-color:#1e3a8a}
+.map-note{font-size:10.5px;color:var(--sub);text-align:center;margin-top:6px}
+.gov-section{margin-top:20px;border-top:8px solid var(--bg);padding-top:16px}
+.gov-title{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:700;color:var(--navy);margin-bottom:2px}
+.gov-title .badge{background:#eef2fb;color:var(--navy);font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px}
+.gov-sub{font-size:11.5px;color:var(--sub);margin-bottom:12px}
+.gov-cards{display:flex;flex-direction:column;gap:10px}
+.gov-card{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--line);  border-radius:12px;background:#fff;cursor:pointer;text-decoration:none;color:inherit}
+.gov-card .gic{width:40px;height:40px;border-radius:10px;background:#eef2fb;color:var(--navy);
+  display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0}
+.gov-card .gtxt{flex:1;min-width:0}
+.gov-card .gname{font-size:14px;font-weight:700}
+.gov-card .gdesc{font-size:11.5px;color:var(--sub);margin-top:2px;line-height:1.4}
+.gov-card .garrow{color:#bbb;font-size:16px;flex-shrink:0}
+.gov-foot{display:flex;justify-content:space-between;align-items:center;margin-top:12px;
+  padding:10px 12px;background:#f7f8fb;border-radius:10px;font-size:11.5px;color:var(--sub)}
+.gov-foot b{color:var(--ink)}
+.gov-modal{background:#fff;width:100%;max-width:480px;height:88vh;border-radius:16px 16px 0 0;
+  display:flex;flex-direction:column;animation:up .18s ease-out;position:relative}
+.gov-modal .gm-head{display:flex;align-items:center;justify-content:space-between;padding:16px 18px 10px;
+  border-bottom:1px solid var(--line)}
+.gov-modal .gm-head h3{margin:0;font-size:16.5px}
+.gov-modal .gm-body{flex:1;overflow-y:auto;padding:14px 16px 22px}
+.gm-item{display:flex;gap:12px;padding:11px 4px;border-bottom:1px solid var(--line)}
+.gm-item .gi-ic{width:36px;height:36px;border-radius:9px;background:#eef2fb;display:flex;
+  align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.gm-item .gi-info{flex:1;min-width:0}
+.gm-item .gi-name{font-size:14px;font-weight:700}
+.gm-item .gi-desc{font-size:12px;color:var(--sub);margin-top:2px}
+.gm-item .gi-dist{font-size:12.5px;font-weight:700;color:var(--navy);white-space:nowrap}
+.civil-form label{display:block;font-size:12.5px;font-weight:700;margin:12px 0 6px}
+.civil-form select,.civil-form textarea{width:100%;padding:10px;border:1px solid var(--line);
+  border-radius:8px;font-size:13.5px;font-family:inherit}
+.civil-form textarea{min-height:100px;resize:vertical}
+.civil-form .submit-btn{width:100%;margin-top:16px;padding:13px 0;border:none;border-radius:10px;
+  background:var(--navy);color:#fff;font-weight:700;font-size:14.5px;cursor:pointer}
+.civil-list{margin-top:18px;border-top:8px solid var(--bg);padding-top:12px}
+.civil-list .cl-title{font-size:12.5px;font-weight:700;color:var(--sub);margin-bottom:6px}
+.civil-row{display:flex;justify-content:space-between;gap:8px;font-size:12.5px;padding:8px 4px;
+  border-bottom:1px solid var(--line)}
+.civil-row .cr-tag{color:var(--navy);font-weight:700}
+.civil-row .cr-status{color:var(--sub)}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:2px 0 10px;margin-bottom:4px}
+.chip{flex-shrink:0;padding:7px 14px;border-radius:20px;border:1px solid var(--line);
+  background:#fff;font-size:13px;font-weight:600;color:var(--sub);cursor:pointer;white-space:nowrap}
+.chip.active{background:var(--navy);border-color:var(--navy);color:#fff}
+.cats{display:flex;gap:8px;overflow-x:auto;padding-bottom:12px}
+.cat{flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:4px;
+  padding:8px 10px;border-radius:10px;border:1px solid var(--line);background:#fff;
+  cursor:pointer;font-size:11px;color:var(--sub);min-width:56px}
+.cat.active{border-color:var(--navy);background:#eef2fb;color:var(--navy);font-weight:700}
+.cat .ic{font-size:18px}
+.search{display:flex;gap:8px;margin-bottom:10px}
+.search input{flex:1;padding:10px 12px;border:1px solid var(--line);border-radius:8px;font-size:14px}
+.search button{padding:0 14px;border-radius:8px;border:1px solid var(--navy);background:var(--navy);color:#fff;font-weight:600}
+.count-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.count{font-size:12.5px;color:var(--sub)}
+.src-badge{font-size:10.5px;font-weight:700;color:#888;background:#f1f1f1;padding:2px 8px;border-radius:10px}
+.src-badge.real{color:#1a7a3c;background:#e8f6ec}
+.store{display:flex;gap:12px;padding:12px 4px;border-bottom:1px solid var(--line);cursor:pointer}
+.store .ic{width:38px;height:38px;border-radius:9px;background:#eef2fb;display:flex;align-items:center;
+  justify-content:center;font-size:18px;flex-shrink:0}
+.store .info{flex:1;min-width:0}
+.store .name{font-size:14.5px;font-weight:700}
+.store .meta{font-size:12px;color:var(--sub);margin-top:2px}
+.store .dist{font-size:13px;font-weight:700;color:var(--navy);white-space:nowrap}
+.empty{text-align:center;color:var(--sub);font-size:13px;padding:30px 0}.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:flex-end;
+  justify-content:center;z-index:50}
+.modal-bg.show{display:flex}
+.modal{background:#fff;width:100%;max-width:480px;border-radius:16px 16px 0 0;padding:20px 18px 24px;
+  animation:up .18s ease-out}
+@keyframes up{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+.modal h3{margin:0 0 4px;font-size:17px}
+.modal .sub{font-size:12.5px;color:var(--sub);margin-bottom:14px}
+.modal .actions{display:flex;gap:8px}
+.modal .actions a,.modal .actions button{flex:1;padding:12px 0;border-radius:10px;border:none;
+  font-size:14px;font-weight:700;text-align:center;text-decoration:none;cursor:pointer}
+.a-call{background:#eef2fb;color:var(--navy)}
+.a-way{background:var(--navy);color:#fff}
+.a-share{background:#f1f1f1;color:var(--ink)}
+.close-x{position:absolute;top:14px;right:16px;background:none;border:none;font-size:20px;color:var(--sub);cursor:pointer}
+.modal{position:relative}
+#toastWrap{position:fixed;bottom:calc(16px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);z-index:100;
+  display:flex;flex-direction:column;gap:8px;width:calc(100% - 32px);max-width:448px}
+.toast{background:#222;color:#fff;padding:10px 14px;border-radius:8px;font-size:13px;
+  box-shadow:0 4px 14px rgba(0,0,0,.25);opacity:.97}
+
+@media (max-width:360px){
+  .addr{font-size:17px}
+  .sos a{font-size:13.5px;padding:10px 0}
+  .cat{min-width:50px;padding:7px 8px}
+  .chip{padding:6px 11px;font-size:12.5px}
+  .gps-btn{font-size:11.5px;padding:6px 10px}
+}
+@media (min-width:481px){
+  body{background:#dfe3ea}
+  .app{margin:0 auto;box-shadow:0 0 40px rgba(0,0,0,.12)}
+}
+</style>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+</head>
+<body>
+<div class="app">
+  <div class="banner">실제 OpenStreetMap 지도를 사용하는 온라인 데모입니다. 업체·구청 데이터는 목업이며, 실서비스는 카카오 API·상가정보 DB와 연동됩니다.</div>
+
+  <div class="header">
+    <div class="top">
+      <span>AISUAL</span>
+      <select id="langSel"><option>한국어</option><option>English</option><option>中文</option><option>日本語</option></select>
+    </div>
+    <div class="addr-row">
+      <div class="addr" id="addrText"><span class="city">부산광역시 수영구</span>남천동로 100</div>
+      <button class="tts-btn" id="ttsBtn" title="음성으로 듣기">🔊</button>
+    </div>
+    <div class="gps-row">
+      <button class="gps-btn" id="gpsBtn">📍 내 GPS 위치로 전환</button>
+      <span class="gps-status" id="gpsStatus"></span>
+    </div>
+  </div>
+
+  <div class="sos">
+    <a class="police" href="tel:112">🚓 112 신고</a>
+    <a class="fire" id="sms119Link" href="sms:119?body=%5B%EA%B8%B4%EA%B8%89%5D%20%EB%B6%80%EC%82%B0%EA%B4%91%EC%97%AD%EC%8B%9C%20%EC%88%98%EC%98%81%EA%B5%AC%20%EB%82%A8%EC%B2%9C%EB%8F%99%EB%A1%9C%20100%20%EC%9C%84%EC%B9%98%EC%97%90%EC%84%9C%20%EA%B8%B4%EA%B8%89%EC%83%81%ED%99%A9%20%EB%B0%9C%EC%83%9D">🚑 119 문자신고</a>
+  </div>
+  <div class="warn">위급사항을 소방기관 또는 관계 행정기관에 거짓으로 알린 자는 500만원 이하 과태료가 부과됩니다.</div>
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="mine">내 위치</button>
+    <button class="tab-btn" data-tab="nearby">주변업체</button>
+  </div>
+
+  <div class="panel active" id="panel-mine">
+    <div id="mapCanvas"></div>
+    <div class="map-note">실시간 온라인 지도(OpenStreetMap) · 중심 마커 = 현재 번호판 위치</div>
+
+    <div class="gov-section">
+      <div class="gov-title">🏛️ <span id="govTitleName">수영구청</span> 안전·관광 안내 <span class="badge" id="govBadge">구 연동</span></div>
+      <div class="gov-sub" id="govSubText">이 주소가 속한 부산광역시 수영구에서 제공하는 안전·관광 정보입니다. (데모 목업 링크)</div>
+      <div class="gov-cards" id="govCards">
+        <a class="gov-card" href="#" data-gov="safety">
+          <div class="gic">🛟</div>
+          <div class="gtxt"><div class="gname" id="govSafetyName">수영구 안전지도</div>
+            <div class="gdesc">민방위 대피소, 재난 대피장소, CCTV 위치를 이 주소 기준으로 안내</div></div>
+          <div class="garrow">›</div>
+        </a>
+        <a class="gov-card" href="#" data-gov="tour">
+          <div class="gic">🗺️</div>
+          <div class="gtxt"><div class="gname" id="govTourName">수영구 관광·둘레길 안내</div>
+            <div class="gdesc">광안리해수욕장·민락수변공원 등 주변 관광지, 도보 코스 소개</div></div>
+          <div class="garrow">›</div>
+        </a>
+        <a class="gov-card" href="#" data-gov="civil">
+          <div class="gic">🏢</div>
+          <div class="gtxt"><div class="gname">생활민원·안전신문고</div>
+            <div class="gdesc">가로등 고장, 도로 파손 등 이 위치 기준 민원 접수</div></div>
+          <div class="garrow">›</div>
+        </a>
+        <a class="gov-card" id="govPhoneCard" href="tel:0517103000">
+          <div class="gic">☎</div>
+          <div class="gtxt"><div class="gname" id="govPhoneName">수영구청 대표전화</div>
+            <div class="gdesc" id="govPhoneDesc">051-710-3000 · 안전총괄과 / 관광진흥과 연결</div></div>
+          <div class="garrow">›</div>
+        </a>
+      </div>
+      <div class="gov-foot">지자체 데이터 연동 시 실제 위치 기반 <b>대피소·관광 콘텐츠</b>로 자동 전환됩니다.</div>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-nearby">
+    <div id="mapCanvas2"></div>
+    <div class="chips" id="radiusChips"></div>
+    <div class="cats" id="catChips"></div>
+    <div class="search">
+      <input id="kwInput" placeholder="반경 안에서 검색 (예: 국밥)">
+      <button id="kwBtn">검색</button>
+    </div>
+    <div class="count-row">
+      <div class="count" id="resultCount"></div>
+      <span class="src-badge" id="dataSourceBadge">목업 데이터</span>
+    </div>
+    <div id="storeList"></div>
+  </div>
+</div>
+
+<div class="modal-bg" id="modalBg">
+  <div class="modal">    <button class="close-x" id="modalClose">✕</button>
+    <h3 id="mName"></h3>
+    <div class="sub" id="mMeta"></div>
+    <div class="actions">
+      <a class="a-call" id="mCall" href="#">☎ 전화</a>
+      <a class="a-way" id="mWay" href="#" target="_blank" rel="noopener">🧭 길찾기</a>
+      <button class="a-share" id="mShare">공유</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="govModalBg">
+  <div class="gov-modal">
+    <div class="gm-head">
+      <h3 id="gmTitle"></h3>
+      <button class="close-x" id="govModalClose" style="position:static">✕</button>
+    </div>
+    <div class="gm-body" id="gmBody"></div>
+  </div>
+</div>
+
+<div id="toastWrap"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+'use strict';
+
+/* ───────── 공통 유틸: Toast + 에러 처리 ───────── */
+function showToast(msg) {
+  var wrap = document.getElementById('toastWrap');
+  var el = document.createElement('div');
+  el.className = 'toast';
+  el.textContent = msg;
+  wrap.appendChild(el);
+  setTimeout(function () { el.remove(); }, 3200);
+}
+window.onerror = function (msg) {
+  showToast('오류가 발생했습니다: ' + msg);
+  console.error(msg);
+  return false;
+};
+window.addEventListener('unhandledrejection', function (e) {
+  showToast('오류가 발생했습니다.');
+  console.error(e.reason);
+});
+
+/* ───────── 좌표 계산 (Haversine, 지구 반경 6371km) ───────── */
+var EARTH_R_KM = 6371.0;
+function toRad(d) { return (d * Math.PI) / 180; }
+function toDeg(r) { return (r * 180) / Math.PI; }
+
+function haversineKm(lat1, lon1, lat2, lon2) {
+  var phi1 = toRad(lat1), phi2 = toRad(lat2);
+  var dPhi = toRad(lat2 - lat1), dLambda = toRad(lon2 - lon1);
+  var a = Math.sin(dPhi / 2) * Math.sin(dPhi / 2) +
+    Math.cos(phi1) * Math.cos(phi2) * Math.sin(dLambda / 2) * Math.sin(dLambda / 2);
+  var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return EARTH_R_KM * c;
+}
+function destinationPoint(lat1, lon1, bearingDeg, distKm) {
+  var dR = distKm / EARTH_R_KM;
+  var brng = toRad(bearingDeg);
+  var lat1r = toRad(lat1), lon1r = toRad(lon1);
+  var lat2 = Math.asin(Math.sin(lat1r) * Math.cos(dR) + Math.cos(lat1r) * Math.sin(dR) * Math.cos(brng));
+  var lon2 = lon1r + Math.atan2(
+    Math.sin(brng) * Math.sin(dR) * Math.cos(lat1r),
+    Math.cos(dR) - Math.sin(lat1r) * Math.sin(lat2)
+  );
+  return { lat: toDeg(lat2), lon: toDeg(lon2) };
+}
+
+/* ───────── 결정적 시드 난수 (mulberry32) ───────── */
+function mulberry32(seed) {
+  return function () {
+    seed |= 0; seed = (seed + 0x6D2B79F5) | 0;
+    var t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+var rand = mulberry32(20260924);
+
+/* ───────── 중심 좌표 & 목업 업체 42개 생성 ───────── */
+var CENTER = { lat: 35.16418, lon: 129.11351 }; // 부산 수영구 남천동로 100 부근
+var currentAddrLabel = '부산광역시 수영구 남천동로 100'; // TTS·119 문자·민원 접수에 쓰이는 현재 위치 표기(GPS 전환 시 갱신)
+
+/* GPS/구청 전환 시 119 문자·민원 폼 등 하위 메뉴 텍스트를 함께 갱신한다 */
+function applyAddrLabel(label) {
+  currentAddrLabel = label;
+  var smsLink = document.getElementById('sms119Link');
+  if (smsLink) {
+    var body = '[긴급] ' + label + ' 위치에서 긴급상황 발생';
+    smsLink.setAttribute('href', 'sms:119?body=' + encodeURIComponent(body));
+  }
+}
+var CATS = [
+  { key: 'food', label: '음식점', icon: '🍚' },
+  { key: 'cafe', label: '카페', icon: '☕' },
+  { key: 'conv', label: '편의점', icon: '🏪' },
+  { key: 'pharm', label: '약국', icon: '💊' },
+  { key: 'hosp', label: '병원', icon: '🏥' },
+  { key: 'park', label: '주차장', icon: '🅿️' },
+  { key: 'etc', label: '기타', icon: '🏬' }
+];
+// 업종별 이름 접두어는 지역명이 아닌 일반 명칭만 사용하고, GPS로 감지된 지역명(areaShort)을 앞에 붙여
+// "행복식당" → "강남구 행복식당"처럼 실제 위치에 맞게 보이도록 한다. (특정 지역 지명 고정 X)
+var NAME_PARTS = {
+  food: ['행복', '우리', '중앙', '으뜸', '한마음'],
+  cafe: ['카페', '커피', '로스터리', '베이커리&'],
+  conv: ['씨유', '지에스25', '이마트24', '세븐일레븐'],
+  pharm: ['온누리', '행복', '중앙', '건강'],
+  hosp: ['연세', '365', '우리', '중앙'],
+  park: ['공영', '민영', '타워', '노상'],
+  etc: ['동네', '중앙', '으뜸', '한마음']
+};
+var STORES = [];
+function buildStores(centerPt, areaLabel) {
+  var areaShort = (areaLabel || '부산광역시 수영구').split(' ').pop(); // "부산광역시 수영구" → "수영구"
+  var out = [];  var id = 1;
+  for (var i = 0; i < 42; i += 1) {
+    var cat = CATS[Math.floor(rand() * CATS.length)];
+    var bearing = rand() * 360;
+    var distKm = 0.05 + rand() * 4.9; // 50m ~ 4.95km
+    var pt = destinationPoint(centerPt.lat, centerPt.lon, bearing, distKm);
+    var parts = NAME_PARTS[cat.key];
+    var suffix = cat.key === 'food' ? '식당' : cat.key === 'cafe' ? '' : cat.key === 'pharm' ? '약국' :
+      cat.key === 'hosp' ? '의원' : cat.key === 'park' ? '주차장' : cat.key === 'conv' ? '편의점' : '상회';
+    // 편의점(conv)은 실제 프랜차이즈명 그대로, 그 외 업종은 "지역명+일반명칭" 형태로 조합
+    // (예: 강남구 + 행복 + 식당 → "강남구행복식당") → GPS로 지역이 바뀌면 이름도 함께 바뀐다.
+    var namePart = parts[Math.floor(rand() * parts.length)];
+    var name = cat.key === 'conv' ? (namePart + suffix) : (areaShort + namePart + suffix);
+    // 지역번호도 랜덤 생성(특정 지역 고정 X)
+    var areaCode = ['02', '031', '032', '051', '053', '062'][Math.floor(rand() * 6)];
+    out.push({
+      id: id, name: name, category: cat.key, icon: cat.icon,
+      lat: pt.lat, lon: pt.lon,
+      phone: areaCode + '-' + (500 + Math.floor(rand() * 400)) + '-' + (1000 + Math.floor(rand() * 9000)),
+      addr: (areaLabel || '부산광역시 수영구') + ' 인근 ' + (10 + Math.floor(rand() * 90))
+    });
+    id += 1;
+  }
+  return out;
+}
+STORES = buildStores(CENTER, '부산광역시 수영구');
+
+/* ─────────────────────────────────────────────────────────────
+   무료 공공 상가정보 연동: 소상공인시장진흥공단_상가(상권)정보 API
+   (공공데이터포털 data.go.kr, 데이터셋 15012005) - 반경 내 상가업소 조회
+   엔드포인트: GET https://apis.data.go.kr/B553077/api/open/sdsc2/storeListInRadius
+   파라미터  : serviceKey, cx(경도), cy(위도), radius(m, 이 API 자체 상한 1000m),
+              type=json, numOfRows, pageNo
+   응답 예   : { header:{resultCode,resultMsg}, body:{items:[{bizesNm, indsLclsNm,
+              indsMclsNm, rdnmAdr, lnoAdr, lon, lat, ...}], totalCount, ...} }
+   ※ 이 데이터셋은 전화번호를 제공하지 않음(개인정보 비공개) → phone은 빈 값 처리.
+   ※ 공공데이터포털에서 무료로 발급받은 "일반 인증키(Decoding)"를 아래에 넣으면
+      실제 데이터로 자동 전환되고, 키가 없거나 호출 실패 시 목업 데이터로 대체된다.
+   ───────────────────────────────────────────────────────────── */
+var SANGGA_CFG = {
+  enabled: true,
+  serviceKey: 'YOUR_DATA_GO_KR_DECODING_SERVICE_KEY', // TODO: data.go.kr에서 무료 발급받은 키로 교체
+  baseUrl: 'https://apis.data.go.kr/B553077/api/open/sdsc2/storeListInRadius',
+  maxRadiusM: 1000, // 반경조회 API 자체 상한(공식 가이드 기준). 이보다 넓은 반경은 다건 조회로 커버 예정.
+  numOfRows: 500
+};
+var usingRealSangga = false;
+
+function mapIndsToCat(lclsNm, mclsNm) {
+  var s = (lclsNm || '') + ' ' + (mclsNm || '');
+  if (/음식|한식|중식|일식|양식|분식|주점|호프|치킨/.test(s)) return { key: 'food', icon: '🍚' };
+  if (/카페|커피|제과|베이커리/.test(s)) return { key: 'cafe', icon: '☕' };
+  if (/편의점|슈퍼|마트/.test(s)) return { key: 'conv', icon: '🏪' };
+  if (/약국|약제/.test(s)) return { key: 'pharm', icon: '💊' };
+  if (/의원|병원|치과|한의원/.test(s)) return { key: 'hosp', icon: '🏥' };
+  if (/주차/.test(s)) return { key: 'park', icon: '🅿️' };
+  return { key: 'etc', icon: '🏬' };
+}
+
+/* 공공데이터포털 상가정보 API에서 반경 내 실제 업체 목록을 가져온다. 실패 시 예외를 던진다. */function fetchRealStores(centerPt, radiusKm) {
+  var radiusM = Math.min(Math.max(radiusKm, 0.05) * 1000, SANGGA_CFG.maxRadiusM);
+  var url = SANGGA_CFG.baseUrl +
+    '?serviceKey=' + encodeURIComponent(SANGGA_CFG.serviceKey) +
+    '&cx=' + centerPt.lon + '&cy=' + centerPt.lat +
+    '&radius=' + Math.round(radiusM) +
+    '&type=json&numOfRows=' + SANGGA_CFG.numOfRows + '&pageNo=1';
+
+  return fetch(url).then(function (res) {
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    return res.json();
+  }).then(function (json) {
+    var items = (json && json.body && json.body.items) || [];
+    if (!items.length) throw new Error('결과 없음');
+    var out = [];
+    for (var i = 0; i < items.length; i += 1) {
+      var it = items[i];
+      var cat = mapIndsToCat(it.indsLclsNm, it.indsMclsNm);
+      var lat = parseFloat(it.lat), lon = parseFloat(it.lon);
+      if (!isFinite(lat) || !isFinite(lon)) continue;
+      out.push({
+        id: it.bizesId || ('real-' + i),
+        name: it.bizesNm || '(상호명 미상)',
+        category: cat.key, icon: cat.icon,
+        lat: lat, lon: lon,
+        phone: '', // 공공데이터 미제공 항목
+        addr: it.rdnmAdr || it.lnoAdr || ''
+      });
+    }
+    return out;
+  });
+}
+
+/* 실데이터 연동을 시도하고, 키 미설정/호출 실패/CORS 차단 시 목업으로 자동 대체한다. */
+function refreshStores(centerPt, areaLabel, radiusKmForFetch) {
+  if (!SANGGA_CFG.enabled || SANGGA_CFG.serviceKey === 'YOUR_DATA_GO_KR_DECODING_SERVICE_KEY') {
+    usingRealSangga = false;
+    STORES = buildStores(centerPt, areaLabel);
+    updateDataSourceBadge();
+    return Promise.resolve();
+  }
+  return fetchRealStores(centerPt, radiusKmForFetch || 5).then(function (real) {
+    STORES = real;
+    usingRealSangga = true;
+    showToast('무료 공공 상가정보(소상공인시장진흥공단) ' + real.length + '건을 불러왔습니다.');
+    updateDataSourceBadge();
+  }).catch(function (err) {
+    console.error(err);
+    STORES = buildStores(centerPt, areaLabel);
+    usingRealSangga = false;
+    showToast('공공 상가정보 API 호출 실패 → 목업 데이터로 대체합니다. (서비스키/CORS 확인 필요)');
+    updateDataSourceBadge();
+  });
+}
+
+function updateDataSourceBadge() {
+  var el = document.getElementById('dataSourceBadge');
+  if (!el) return;
+  el.textContent = usingRealSangga ? '공공데이터 연동' : '목업 데이터';
+  el.classList.toggle('real', usingRealSangga);}
+
+/* ───────── 실제 온라인 지도 (Leaflet + OpenStreetMap 타일) ─────────
+   네트워크가 연결된 환경에서 실제 지도 타일을 불러온다.
+   오프라인이거나 타일 로드에 실패하면 자동으로 대체(연한 배경) 처리한다. */
+var leafletMaps = {}; // { canvasId: { map, centerMarker, circle, poiMarkers:[] } }
+
+function ensureLeafletMap(containerId) {
+  if (leafletMaps[containerId]) return leafletMaps[containerId];
+  if (typeof L === 'undefined') return null; // Leaflet 로드 실패(오프라인) 시 안전 종료
+  var el = document.getElementById(containerId);
+  if (!el) return null;
+
+  var map = L.map(containerId, {
+    zoomControl: false,
+    attributionControl: true,
+    scrollWheelZoom: true
+  }).setView([CENTER.lat, CENTER.lon], 15);
+
+  L.control.zoom({ position: 'bottomright' }).addTo(map);
+
+  // 지도 타일: 1순위 OpenStreetMap, 실패 누적 시 2순위 Esri로 자동 전환.
+  // (일부 통신사 공유 IP(NAT)에서 OSM 타일 서버 레이트리밋에 걸리는 경우가 있어 대비.)
+  var primaryTiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    subdomains: 'abc',
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+  }).addTo(map);
+  var fallbackTiles = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
+    maxZoom: 19,
+    attribution: 'Tiles &copy; Esri &mdash; Source: Esri, HERE, Garmin, FAO, NOAA, USGS'
+  });
+
+  var tileErrorCount = 0;
+  var switchedToFallback = false;
+  primaryTiles.on('tileerror', function () {
+    tileErrorCount += 1;
+    if (tileErrorCount >= 4 && !switchedToFallback) {
+      switchedToFallback = true;
+      map.removeLayer(primaryTiles);
+      fallbackTiles.addTo(map);
+      showToast('지도 서버 접속이 원활하지 않아 예비 지도로 전환했습니다.');
+    }
+  });
+
+  var centerIcon = L.divIcon({
+    className: '',
+    html: '<div style="width:16px;height:16px;border-radius:50%;background:#1e3a8a;' +
+      'border:3px solid #fff;box-shadow:0 0 0 2px #1e3a8a"></div>',
+    iconSize: [16, 16],
+    iconAnchor: [8, 8]
+  });
+  var centerMarker = L.marker([CENTER.lat, CENTER.lon], { icon: centerIcon, zIndexOffset: 1000 }).addTo(map);
+  var circle = L.circle([CENTER.lat, CENTER.lon], {
+    radius: 1000, color: '#1e3a8a', weight: 2.5, opacity: 0.85, dashArray: '6 4',
+    fillColor: '#1e3a8a', fillOpacity: 0.12
+  }).addTo(map);
+  var circleLabel = L.tooltip({
+    permanent: true, direction: 'right', className: 'radius-label', offset: [0, 0]
+  }).setLatLng([CENTER.lat, CENTER.lon]);
+  var rec = { map: map, centerMarker: centerMarker, circle: circle, circleLabel: circleLabel, poiMarkers: [] };
+  leafletMaps[containerId] = rec;
+  return rec;
+}
+
+/* radiusKm(가시반경) 원을 그리고, stores 배열을 마커로 표시한다. stores가 null이면 마커 없이 중심/원만 갱신 */
+function drawMap(containerId, radiusKm, stores) {
+  var rec = ensureLeafletMap(containerId);
+  if (!rec) { return; } // Leaflet 미로드(완전 오프라인) — 지도 없이 나머지 기능은 계속 동작
+
+  rec.map.setView([CENTER.lat, CENTER.lon], stores ? 14 : 15);
+  rec.centerMarker.setLatLng([CENTER.lat, CENTER.lon]);
+  rec.circle.setLatLng([CENTER.lat, CENTER.lon]);
+  var radiusKmSafe = Math.max(radiusKm, 0.05);
+  rec.circle.setRadius(radiusKmSafe * 1000);
+
+  var edgePt = destinationPoint(CENTER.lat, CENTER.lon, 90, radiusKmSafe);
+  rec.circleLabel.setLatLng([edgePt.lat, edgePt.lon]);
+  rec.circleLabel.setContent('반경 ' + distLabelOf(radiusKmSafe));
+  if (!rec.map.hasLayer(rec.circleLabel)) rec.circleLabel.addTo(rec.map);
+
+  for (var m of rec.poiMarkers) rec.map.removeLayer(m);
+  rec.poiMarkers = [];
+
+  if (stores) {
+    for (var s of stores) {
+      var mk = L.circleMarker([s.lat, s.lon], {
+        radius: 6, color: '#fff', weight: 1.5, fillColor: '#d1341c', fillOpacity: 0.95
+      }).addTo(rec.map);
+      mk.bindTooltip(s.name, { direction: 'top', offset: [0, -4] });
+      mk.on('click', (function (store) {
+        return function () {
+          var d = haversineKm(CENTER.lat, CENTER.lon, store.lat, store.lon);
+          openModal(store, distLabelOf(d));
+        };
+      })(s));
+      rec.poiMarkers.push(mk);
+    }
+  }
+  // 컨테이너 크기 변경(탭 전환 등) 후 타일이 밀리는 것을 방지
+  setTimeout(function () { rec.map.invalidateSize(); }, 60);
+}
+
+/* ───────── 필터/정렬 ───────── */
+function filterAndSort(radiusKm, category, keyword) {
+  var out = [];
+  for (var i = 0; i < STORES.length; i += 1) {
+    var s = STORES[i];
+    if (category !== 'all' && s.category !== category) continue;
+    if (keyword && s.name.indexOf(keyword) === -1) continue;
+    var d = haversineKm(CENTER.lat, CENTER.lon, s.lat, s.lon);
+    if (d <= radiusKm) out.push({ store: s, distKm: d });
+  }
+  out.sort(function (a, b) { return a.distKm - b.distKm; });
+  return out;
+}
+
+/* ───────── 상태 ───────── */
+var state = { radiusKm: 1, category: 'all', keyword: '' };
+function renderRadiusChips() {
+  var wrap = document.getElementById('radiusChips');
+  var options = [{ label: '500m', km: 0.5 }, { label: '1km', km: 1 }, { label: '3km', km: 3 }, { label: '5km', km: 5 }];
+  wrap.innerHTML = '';
+  for (var o of options) {
+    var chip = document.createElement('div');
+    chip.className = 'chip' + (state.radiusKm === o.km ? ' active' : '');
+    chip.textContent = o.label;
+    chip.addEventListener('click', function (km) {
+      return function () { state.radiusKm = km; renderRadiusChips(); renderResults(); };
+    }(o.km));
+    wrap.appendChild(chip);
+  }
+}
+
+function renderCatChips() {
+  var wrap = document.getElementById('catChips');
+  var options = [{ key: 'all', label: '전체', icon: '📍' }].concat(CATS);
+  wrap.innerHTML = '';
+  for (var o of options) {
+    var el = document.createElement('div');
+    el.className = 'cat' + (state.category === o.key ? ' active' : '');
+    el.innerHTML = '<span class="ic">' + o.icon + '</span><span>' + o.label + '</span>';
+    el.addEventListener('click', function (key) {
+      return function () { state.category = key; renderCatChips(); renderResults(); };
+    }(o.key));
+    wrap.appendChild(el);
+  }
+}
+
+function renderResults() {
+  var results = filterAndSort(state.radiusKm, state.category, state.keyword);
+  document.getElementById('resultCount').textContent =
+    '반경 ' + (state.radiusKm < 1 ? state.radiusKm * 1000 + 'm' : state.radiusKm + 'km') + ' 안 ' + results.length + '건';
+  var list = document.getElementById('storeList');
+  list.innerHTML = '';
+  if (results.length === 0) {
+    var empty = document.createElement('div');
+    empty.className = 'empty';
+    empty.textContent = '조건에 맞는 업체가 없습니다.';
+    list.appendChild(empty);
+  } else {
+    for (var r of results) {
+      var row = document.createElement('div');
+      row.className = 'store';
+      var distLabel = r.distKm < 1 ? Math.round(r.distKm * 1000) + 'm' : r.distKm.toFixed(1) + 'km';
+      row.innerHTML =
+        '<div class="ic">' + r.store.icon + '</div>' +
+        '<div class="info"><div class="name">' + r.store.name + '</div>' +
+        '<div class="meta">' + r.store.addr + '</div></div>' +
+        '<div class="dist">' + distLabel + '</div>';
+      row.addEventListener('click', function (store, dist) {
+        return function () { openModal(store, dist); };
+      }(r.store, distLabel));
+      list.appendChild(row);
+    }
+  }
+  drawMap('mapCanvas2', state.radiusKm, results.map(function (r) { return r.store; }));
+}
+/* ───────── 상세 모달 ───────── */
+var currentStore = null;
+function openModal(store, distLabel) {
+  currentStore = store;
+  document.getElementById('mName').textContent = store.icon + ' ' + store.name;
+  document.getElementById('mMeta').textContent = store.addr + ' · ' + distLabel + ' · ' + store.phone;
+  document.getElementById('mCall').href = 'tel:' + store.phone.replace(/-/g, '');
+  document.getElementById('mWay').href =
+    'https://map.kakao.com/link/to/' + encodeURIComponent(store.name) + ',' + store.lat + ',' + store.lon;
+  document.getElementById('modalBg').classList.add('show');
+}
+document.getElementById('modalClose').addEventListener('click', function () {
+  document.getElementById('modalBg').classList.remove('show');
+});
+document.getElementById('modalBg').addEventListener('click', function (e) {
+  if (e.target.id === 'modalBg') document.getElementById('modalBg').classList.remove('show');
+});
+document.getElementById('mShare').addEventListener('click', function () {
+  if (!currentStore) return;
+  var text = currentStore.name + ' - ' + currentStore.addr + ' (' + currentStore.phone + ')';
+  if (navigator.share) {
+    navigator.share({ title: currentStore.name, text: text }).catch(function () {});
+  } else if (navigator.clipboard) {
+    navigator.clipboard.writeText(text).then(function () {
+      showToast('클립보드에 복사했습니다.');
+    }).catch(function () {
+      showToast('공유하기를 지원하지 않는 환경입니다.');
+    });
+  } else {
+    showToast('공유하기를 지원하지 않는 환경입니다.');
+  }
+});
+
+/* ───────── 탭 전환 ───────── */
+var tabBtns = document.querySelectorAll('.tab-btn');
+for (var tb of tabBtns) {
+  tb.addEventListener('click', function () {
+    for (var b of tabBtns) b.classList.remove('active');
+    this.classList.add('active');
+    var target = this.getAttribute('data-tab');
+    document.getElementById('panel-mine').classList.toggle('active', target === 'mine');
+    document.getElementById('panel-nearby').classList.toggle('active', target === 'nearby');
+    if (target === 'nearby') renderResults();
+  });
+}
+
+/* ───────── 검색 ───────── */
+document.getElementById('kwBtn').addEventListener('click', function () {
+  state.keyword = document.getElementById('kwInput').value.trim();
+  renderResults();
+});
+document.getElementById('kwInput').addEventListener('keydown', function (e) {
+  if (e.key === 'Enter') {
+    state.keyword = this.value.trim();
+    renderResults();
+  }
+});
+
+/* ───────── TTS (Web Speech API) ───────── */document.getElementById('ttsBtn').addEventListener('click', function () {
+  var btn = this;
+  if (!('speechSynthesis' in window)) {
+    showToast('이 브라우저는 음성 안내를 지원하지 않습니다.');
+    return;
+  }
+  window.speechSynthesis.cancel();
+  var u = new SpeechSynthesisUtterance('이 곳의 위치는 ' + currentAddrLabel + ' 입니다.');
+  u.lang = 'ko-KR';
+  u.onstart = function () { btn.classList.add('playing'); };
+  u.onend = function () { btn.classList.remove('playing'); };
+  u.onerror = function () { btn.classList.remove('playing'); showToast('음성 재생에 실패했습니다.'); };
+  window.speechSynthesis.speak(u);
+});
+
+/* ───────── 구청 안전·관광 안내: 목업 데이터 생성 ───────── */
+var randGov = mulberry32(719);
+function buildGovList(count, namePool, iconPool, descPool) {
+  var out = [];
+  for (var i = 0; i < count; i += 1) {
+    var bearing = randGov() * 360;
+    var distKm = 0.1 + randGov() * 2.4;
+    var pt = destinationPoint(CENTER.lat, CENTER.lon, bearing, distKm);
+    out.push({
+      name: namePool[i % namePool.length] + (i >= namePool.length ? ' ' + (Math.floor(i / namePool.length) + 1) + '호' : ''),
+      icon: iconPool[i % iconPool.length],
+      desc: descPool[i % descPool.length],
+      lat: pt.lat, lon: pt.lon
+    });
+  }
+  var d = CENTER;
+  for (var j = 0; j < out.length; j += 1) {
+    out[j].distKm = haversineKm(d.lat, d.lon, out[j].lat, out[j].lon);
+  }
+  out.sort(function (a, b) { return a.distKm - b.distKm; });
+  return out;
+}
+function suyeongShelters() {
+  return buildGovList(
+    6,
+    ['남천중학교 지하대피소', '수영구청 별관 대피소', '망미주공 경로당 대피소', '광안초등학교 대피소', 'CCTV 남천사거리', 'CCTV 수영교차로'],
+    ['🛟', '🛟', '🛟', '🛟', '📷', '📷'],
+    ['민방위 비상대피소 · 수용인원 300명', '민방위 비상대피소 · 수용인원 150명', '민방위 비상대피소 · 수용인원 80명',
+     '민방위 비상대피소 · 수용인원 200명', '방범·재난 감시 CCTV', '방범·재난 감시 CCTV']
+  );
+}
+function suyeongTourspots() {
+  return buildGovList(
+    5,
+    ['광안리해수욕장', '민락수변공원', 'SUP 체험 선착장', '남천동 카페거리', '수영사적공원'],
+    ['🏖️', '🌳', '🚣', '☕', '🏯'],
+    ['부산 대표 해변 · 광안대교 야경 명소', '요트경기장 인접 산책·야시장', '수상레저 체험 프로그램 운영',
+     '해안뷰 카페 밀집 지역', '조선시대 수군 유적지 · 도보 20분']
+  );
+}
+/* 수영구 외 지역: 실데이터 미보유 → 구 이름을 반영한 일반형 목업으로 대체 */
+function genericShelters(distName) {
+  return buildGovList(
+    5,
+    [distName + '청 별관 대피소', distName + ' 관내 초등학교 대피소', distName + ' 주민센터 대피소', 'CCTV 관내 사거리 1', 'CCTV 관내 사거리 2'],    ['🛟', '🛟', '🛟', '📷', '📷'],
+    ['민방위 비상대피소', '민방위 비상대피소 · 학교시설', '민방위 비상대피소 · 주민센터', '방범·재난 감시 CCTV', '방범·재난 감시 CCTV']
+  );
+}
+function genericTourspots(distName) {
+  return buildGovList(
+    4,
+    [distName + ' 대표 공원', distName + ' 둘레길 코스', distName + ' 문화의 거리', distName + ' 전망대'],
+    ['🌳', '🚶', '🎨', '🏙️'],
+    ['관내 대표 근린공원', '도보 산책 코스', '카페·문화시설 밀집 구간', '관내 전망 명소']
+  );
+}
+var SHELTERS = suyeongShelters();
+var TOURSPOTS = suyeongTourspots();
+
+/* ───────── 구청 자동 판별용 지자체 목록 (GPS 최근접 매칭) ───────── */
+var DISTRICTS = [
+  { name: '부산광역시 수영구', short: '수영구', lat: 35.16418, lon: 129.11351, phone: '051-710-3000', deptDesc: '안전총괄과 / 관광진흥과 연결' },
+  { name: '부산광역시 해운대구', short: '해운대구', lat: 35.16315, lon: 129.16354, phone: '051-749-4000', deptDesc: '안전총괄과 / 관광컨벤션과 연결' },
+  { name: '부산광역시 남구', short: '남구', lat: 35.13672, lon: 129.08428, phone: '051-607-4000', deptDesc: '안전총괄과 / 문화체육과 연결' },
+  { name: '부산광역시 중구', short: '중구', lat: 35.10611, lon: 129.03225, phone: '051-600-4000', deptDesc: '안전총괄과 / 관광진흥과 연결' },
+  { name: '서울특별시 강남구', short: '강남구', lat: 37.51724, lon: 127.04738, phone: '02-3423-5000', deptDesc: '안전지원과 / 문화체육과 연결' },
+  { name: '서울특별시 종로구', short: '종로구', lat: 37.57346, lon: 126.97940, phone: '02-2148-1114', deptDesc: '안전총괄과 / 관광체육과 연결' },
+  { name: '경기도 남양주시', short: '남양주시', lat: 37.63603, lon: 127.21652, phone: '031-590-2000', deptDesc: '안전총괄과 / 관광과 연결' }
+];
+function nearestDistrict(lat, lon) {
+  var best = DISTRICTS[0];
+  var bestKm = haversineKm(lat, lon, best.lat, best.lon);
+  for (var i = 1; i < DISTRICTS.length; i += 1) {
+    var d = DISTRICTS[i];
+    var km = haversineKm(lat, lon, d.lat, d.lon);
+    if (km < bestKm) { bestKm = km; best = d; }
+  }
+  return { district: best, distKm: bestKm };
+}
+
+function applyDistrict(district) {
+  document.getElementById('govTitleName').textContent = district.short + '청';
+  document.getElementById('govSubText').textContent =
+    '이 위치와 가장 가까운 ' + district.name + '에서 제공하는 안전·관광 정보입니다. (데모 목업 링크)';
+  document.getElementById('govSafetyName').textContent = district.short + ' 안전지도';
+  document.getElementById('govTourName').textContent = district.short + ' 관광·둘레길 안내';
+  document.getElementById('govPhoneName').textContent = district.short + '청 대표전화';
+  document.getElementById('govPhoneDesc').textContent = district.phone + ' · ' + district.deptDesc;
+  document.getElementById('govPhoneCard').setAttribute('href', 'tel:' + district.phone.replace(/-/g, ''));
+
+  if (district.short === '수영구') {
+    SHELTERS = suyeongShelters();
+    TOURSPOTS = suyeongTourspots();
+  } else {
+    SHELTERS = genericShelters(district.short);
+    TOURSPOTS = genericTourspots(district.short);
+  }
+}
+var CIVIL_TYPES = ['가로등 고장', '도로 파손·포트홀', '불법주정차', '쓰레기 무단투기', '보도블럭 파손', '기타 안전 위험'];
+var civilReports = [];
+
+/* ───────── 구청 모달 열기/닫기 ───────── */
+function closeGovModal() {
+  document.getElementById('govModalBg').classList.remove('show');}
+document.getElementById('govModalClose').addEventListener('click', closeGovModal);
+document.getElementById('govModalBg').addEventListener('click', function (e) {
+  if (e.target.id === 'govModalBg') closeGovModal();
+});
+
+function distLabelOf(km) {
+  return km < 1 ? Math.round(km * 1000) + 'm' : km.toFixed(1) + 'km';
+}
+
+function renderGovList(title, items) {
+  document.getElementById('gmTitle').textContent = title;
+  var body = document.getElementById('gmBody');
+  body.innerHTML = '';
+  for (var it of items) {
+    var row = document.createElement('div');
+    row.className = 'gm-item';
+    row.innerHTML =
+      '<div class="gi-ic">' + it.icon + '</div>' +
+      '<div class="gi-info"><div class="gi-name">' + it.name + '</div>' +
+      '<div class="gi-desc">' + it.desc + '</div></div>' +
+      '<div class="gi-dist">' + distLabelOf(it.distKm) + '</div>';
+    row.addEventListener('click', function (item) {
+      return function () {
+        showToast(item.name + ' · 이 위치까지 약 ' + distLabelOf(item.distKm));
+      };
+    }(it));
+    body.appendChild(row);
+  }
+  document.getElementById('govModalBg').classList.add('show');
+}
+
+function renderCivilForm() {
+  document.getElementById('gmTitle').textContent = '생활민원·안전신문고';
+  var body = document.getElementById('gmBody');
+  body.innerHTML = '';
+
+  var form = document.createElement('div');
+  form.className = 'civil-form';
+  var optHtml = '';
+  for (var t of CIVIL_TYPES) optHtml += '<option>' + t + '</option>';
+  form.innerHTML =
+    '<div style="font-size:12px;color:var(--sub)">접수 위치: ' + currentAddrLabel + ' 인근</div>' +
+    '<label>민원 유형</label>' +
+    '<select id="civilType">' + optHtml + '</select>' +
+    '<label>상세 내용</label>' +
+    '<textarea id="civilDesc" placeholder="상황을 간단히 설명해 주세요."></textarea>' +
+    '<button class="submit-btn" id="civilSubmit">민원 접수하기</button>' +
+    '<div class="civil-list" id="civilListWrap" style="display:none">' +
+    '<div class="cl-title">접수 내역 (이 세션 기준)</div>' +
+    '<div id="civilRows"></div></div>';
+  body.appendChild(form);
+
+  function renderRows() {
+    var wrap = document.getElementById('civilListWrap');
+    var rowsEl = document.getElementById('civilRows');
+    if (civilReports.length === 0) { wrap.style.display = 'none'; return; }
+    wrap.style.display = 'block';
+    rowsEl.innerHTML = '';
+    for (var r of civilReports) {      var row = document.createElement('div');
+      row.className = 'civil-row';
+      row.innerHTML =
+        '<span class="cr-tag">' + r.type + '</span>' +
+        '<span>' + (r.desc || '(내용 없음)') + '</span>' +
+        '<span class="cr-status">' + r.status + '</span>';
+      rowsEl.appendChild(row);
+    }
+  }
+  renderRows();
+
+  document.getElementById('civilSubmit').addEventListener('click', function () {
+    var type = document.getElementById('civilType').value;
+    var desc = document.getElementById('civilDesc').value.trim();
+    civilReports.unshift({ type: type, desc: desc, status: '접수완료' });
+    renderRows();
+    document.getElementById('civilDesc').value = '';
+    showToast('민원이 접수되었습니다. (' + type + ')');
+  });
+}
+
+/* ───────── 구청 안전·관광 카드 클릭 연결 ───────── */
+var currentDistrict = DISTRICTS[0]; // 기본값: 수영구
+var govCards = document.querySelectorAll('#govCards .gov-card[data-gov]');
+for (var gc of govCards) {
+  gc.addEventListener('click', function (e) {
+    e.preventDefault();
+    var kind = this.getAttribute('data-gov');
+    if (kind === 'safety') renderGovList(currentDistrict.short + ' 안전지도', SHELTERS);
+    else if (kind === 'tour') renderGovList(currentDistrict.short + ' 관광·둘레길 안내', TOURSPOTS);
+    else if (kind === 'civil') renderCivilForm();
+  });
+}
+
+/* ───────── GPS 활성화: 실제 기기 위치 기반으로 전환 ───────── */
+var gpsActive = false;
+function setGpsStatus(text) {
+  document.getElementById('gpsStatus').textContent = text;
+}
+function onGpsSuccess(btn, pos) {
+  var lat = pos.coords.latitude;
+  var lon = pos.coords.longitude;
+  var acc = Math.round(pos.coords.accuracy || 0);
+
+  CENTER = { lat: lat, lon: lon };
+  var nd = nearestDistrict(lat, lon);
+  currentDistrict = nd.district;
+  applyDistrict(currentDistrict);
+
+  var addrEl = document.getElementById('addrText');
+  addrEl.innerHTML = '<span class="city">' + currentDistrict.name + ' 인근</span>GPS 실시간 위치 (오차 ±' + acc + 'm)';
+  applyAddrLabel(currentDistrict.name + ' GPS 실시간 위치(위도 ' + lat.toFixed(5) + ', 경도 ' + lon.toFixed(5) + ')');
+
+  drawMap('mapCanvas', 1, null);
+  gpsActive = true;
+  btn.classList.add('on');
+  btn.disabled = false;
+  btn.textContent = '📍 GPS 사용 중 (다시 갱신)';
+  setGpsStatus('최근접 지자체: ' + currentDistrict.short + ' (약 ' + distLabelOf(nd.distKm) + ')');
+  showToast('GPS 위치를 확인했습니다 → ' + currentDistrict.name + ' 데이터로 전환');
+  refreshStores(CENTER, currentDistrict.name, state.radiusKm).then(function () {
+    if (document.getElementById('panel-nearby').classList.contains('active')) renderResults();
+  });
+}
+
+function gpsErrorReason(err) {
+  if (err && err.code === 1) return 'GPS 권한이 거부되었습니다. 브라우저 주소창 옆 위치 권한을 허용해 주세요.';
+  if (err && err.code === 2) return '위치 정보를 사용할 수 없습니다. 실내/네트워크 상태를 확인해 주세요.';
+  if (err && err.code === 3) return '위치 확인 시간이 초과되었습니다.';
+  return '위치 확인에 실패했습니다.';
+}
+
+document.getElementById('gpsBtn').addEventListener('click', function () {
+  var btn = this;
+  if (!('geolocation' in navigator)) {
+    showToast('이 브라우저/환경은 GPS(위치 정보)를 지원하지 않습니다.');
+    setGpsStatus('미지원 환경');
+    return;
+  }
+  if (!window.isSecureContext) {
+    showToast('HTTPS(보안 연결)가 아니면 위치 정보를 사용할 수 없습니다.');
+    setGpsStatus('비보안 연결(HTTP)');
+    return;
+  }
+  btn.disabled = true;
+  btn.textContent = '📍 정밀 위치 확인 중...';
+  setGpsStatus('GPS 신호 대기 중... (최대 12초)');
+
+  navigator.geolocation.getCurrentPosition(
+    function (pos) { onGpsSuccess(btn, pos); },
+    function (err1) {
+      // 1차(고정밀 GPS) 실패/시간초과 시 → 2차: Wi-Fi/기지국 기반 저정밀 위치로 자동 재시도
+      console.error('GPS 1차 실패:', err1);
+      btn.textContent = '📍 네트워크 기반 위치로 재시도 중...';
+      setGpsStatus('GPS 신호가 약해 네트워크 기반 위치로 재시도합니다...');
+      navigator.geolocation.getCurrentPosition(
+        function (pos) { onGpsSuccess(btn, pos); },
+        function (err2) {
+          btn.disabled = false;
+          btn.textContent = '📍 내 GPS 위치로 전환';
+          showToast(gpsErrorReason(err2));
+          setGpsStatus('');
+          console.error('GPS 2차 실패:', err2);
+        },
+        { enableHighAccuracy: false, timeout: 15000, maximumAge: 60000 }
+      );
+    },
+    { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
+  );
+});
+
+/* ───────── 초기 렌더 ───────── */
+drawMap('mapCanvas', 1, null);
+renderRadiusChips();
+renderCatChips();
+updateDataSourceBadge();
+refreshStores(CENTER, '부산광역시 수영구', state.radiusKm).then(function () {
+  if (document.getElementById('panel-nearby').classList.contains('active')) renderResults();
+});</script>
+</body>
+</html>
