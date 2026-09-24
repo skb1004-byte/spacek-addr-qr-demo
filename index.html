@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ko">
 <head>
 <meta charset="utf-8">
@@ -52,12 +52,26 @@ html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
   padding:2px 8px;border-radius:10px;box-shadow:0 1px 4px rgba(0,0,0,.25)}
 .radius-label::before{border-right-color:#1e3a8a}
 .map-note{font-size:10.5px;color:var(--sub);text-align:center;margin-top:6px}
+.sos-icons{display:flex;gap:14px;padding:16px 18px 10px;justify-content:center}
+.sos-icon{display:flex;flex-direction:column;align-items:center;gap:6px;text-decoration:none;color:inherit;flex:1;max-width:120px}
+.sos-icon .sic{width:60px;height:60px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:28px;color:#fff;box-shadow:0 3px 10px rgba(0,0,0,.18)}
+.sos-icon.police .sic{background:#2255aa}
+.sos-icon.fire .sic{background:var(--red)}
+.sos-icon .slabel{font-size:12.5px;font-weight:700}
 .gov-section{margin-top:20px;border-top:8px solid var(--bg);padding-top:16px}
+.gov-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px 8px;margin-top:6px}
+.gov-grid .gg-item{display:flex;flex-direction:column;align-items:center;gap:7px;text-decoration:none;
+  color:inherit;cursor:pointer;background:none;border:none;font-family:inherit;padding:0}
+.gov-grid .gg-ic{width:54px;height:54px;border-radius:50%;background:#eef2fb;color:var(--navy);
+  display:flex;align-items:center;justify-content:center;font-size:23px}
+.gov-grid .gg-label{font-size:11.5px;font-weight:600;text-align:center;line-height:1.3}
 .gov-title{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:700;color:var(--navy);margin-bottom:2px}
 .gov-title .badge{background:#eef2fb;color:var(--navy);font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px}
 .gov-sub{font-size:11.5px;color:var(--sub);margin-bottom:12px}
 .gov-cards{display:flex;flex-direction:column;gap:10px}
-.gov-card{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--line);  border-radius:12px;background:#fff;cursor:pointer;text-decoration:none;color:inherit}
+.gov-card{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--line);
+  border-radius:12px;background:#fff;cursor:pointer;text-decoration:none;color:inherit}
 .gov-card .gic{width:40px;height:40px;border-radius:10px;background:#eef2fb;color:var(--navy);
   display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0}
 .gov-card .gtxt{flex:1;min-width:0}
@@ -116,7 +130,8 @@ html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
 .store .name{font-size:14.5px;font-weight:700}
 .store .meta{font-size:12px;color:var(--sub);margin-top:2px}
 .store .dist{font-size:13px;font-weight:700;color:var(--navy);white-space:nowrap}
-.empty{text-align:center;color:var(--sub);font-size:13px;padding:30px 0}.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:flex-end;
+.empty{text-align:center;color:var(--sub);font-size:13px;padding:30px 0}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:flex-end;
   justify-content:center;z-index:50}
 .modal-bg.show{display:flex}
 .modal{background:#fff;width:100%;max-width:480px;border-radius:16px 16px 0 0;padding:20px 18px 24px;
@@ -170,11 +185,12 @@ html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
     </div>
   </div>
 
-  <div class="sos">
-    <a class="police" href="tel:112">🚓 112 신고</a>
-    <a class="fire" id="sms119Link" href="sms:119?body=%5B%EA%B8%B4%EA%B8%89%5D%20%EB%B6%80%EC%82%B0%EA%B4%91%EC%97%AD%EC%8B%9C%20%EC%88%98%EC%98%81%EA%B5%AC%20%EB%82%A8%EC%B2%9C%EB%8F%99%EB%A1%9C%20100%20%EC%9C%84%EC%B9%98%EC%97%90%EC%84%9C%20%EA%B8%B4%EA%B8%89%EC%83%81%ED%99%A9%20%EB%B0%9C%EC%83%9D">🚑 119 문자신고</a>
+  <div class="sos-icons">
+    <a class="sos-icon police" href="tel:112"><div class="sic">🚓</div><div class="slabel">112 신고</div></a>
+    <a class="sos-icon fire" id="sms119Link" href="sms:119?body=%5B%EA%B8%B4%EA%B8%89%5D%20%EB%B6%80%EC%82%B0%EA%B4%91%EC%97%AD%EC%8B%9C%20%EC%88%98%EC%98%81%EA%B5%AC%20%EB%82%A8%EC%B2%9C%EB%8F%99%EB%A1%9C%20100%20%EC%9C%84%EC%B9%98%EC%97%90%EC%84%9C%20%EA%B8%B4%EA%B8%89%EC%83%81%ED%99%A9%20%EB%B0%9C%EC%83%9D"><div class="sic">🚒</div><div class="slabel">119 신고</div></a>
   </div>
   <div class="warn">위급사항을 소방기관 또는 관계 행정기관에 거짓으로 알린 자는 500만원 이하 과태료가 부과됩니다.</div>
+
   <div class="tabs">
     <button class="tab-btn active" data-tab="mine">내 위치</button>
     <button class="tab-btn" data-tab="nearby">주변업체</button>
@@ -185,35 +201,29 @@ html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
     <div class="map-note">실시간 온라인 지도(OpenStreetMap) · 중심 마커 = 현재 번호판 위치</div>
 
     <div class="gov-section">
-      <div class="gov-title">🏛️ <span id="govTitleName">수영구청</span> 안전·관광 안내 <span class="badge" id="govBadge">구 연동</span></div>
-      <div class="gov-sub" id="govSubText">이 주소가 속한 부산광역시 수영구에서 제공하는 안전·관광 정보입니다. (데모 목업 링크)</div>
-      <div class="gov-cards" id="govCards">
-        <a class="gov-card" href="#" data-gov="safety">
-          <div class="gic">🛟</div>
-          <div class="gtxt"><div class="gname" id="govSafetyName">수영구 안전지도</div>
-            <div class="gdesc">민방위 대피소, 재난 대피장소, CCTV 위치를 이 주소 기준으로 안내</div></div>
-          <div class="garrow">›</div>
-        </a>
-        <a class="gov-card" href="#" data-gov="tour">
-          <div class="gic">🗺️</div>
-          <div class="gtxt"><div class="gname" id="govTourName">수영구 관광·둘레길 안내</div>
-            <div class="gdesc">광안리해수욕장·민락수변공원 등 주변 관광지, 도보 코스 소개</div></div>
-          <div class="garrow">›</div>
-        </a>
-        <a class="gov-card" href="#" data-gov="civil">
-          <div class="gic">🏢</div>
-          <div class="gtxt"><div class="gname">생활민원·안전신문고</div>
-            <div class="gdesc">가로등 고장, 도로 파손 등 이 위치 기준 민원 접수</div></div>
-          <div class="garrow">›</div>
-        </a>
-        <a class="gov-card" id="govPhoneCard" href="tel:0517103000">
-          <div class="gic">☎</div>
-          <div class="gtxt"><div class="gname" id="govPhoneName">수영구청 대표전화</div>
-            <div class="gdesc" id="govPhoneDesc">051-710-3000 · 안전총괄과 / 관광진흥과 연결</div></div>
-          <div class="garrow">›</div>
+      <div class="gov-title">🏛️ 내 주변 위치 정보 <span class="badge" id="govBadge"><span id="govTitleName">수영구</span> 연동</span></div>
+      <div class="gov-sub" id="govSubText">이 주소가 속한 부산광역시 수영구 기준 실시간 안내입니다. (데모 목업 링크)</div>
+      <div class="gov-grid" id="govCards">
+        <button class="gg-item" data-gov="safety">
+          <div class="gg-ic">🛟</div><div class="gg-label" id="govSafetyName">수영구<br>안전지도</div>
+        </button>
+        <button class="gg-item" data-gov="tour">
+          <div class="gg-ic">🗺️</div><div class="gg-label" id="govTourName">수영구<br>관광정보</div>
+        </button>
+        <button class="gg-item" data-gov="restroom">
+          <div class="gg-ic">🚻</div><div class="gg-label">공중화장실</div>
+        </button>
+        <button class="gg-item" data-gov="parking">
+          <div class="gg-ic">🅿️</div><div class="gg-label">주차장</div>
+        </button>
+        <button class="gg-item" data-gov="civil">
+          <div class="gg-ic">🏢</div><div class="gg-label">생활민원<br>안전신문고</div>
+        </button>
+        <a class="gg-item" id="govPhoneCard" href="tel:0517103000">
+          <div class="gg-ic">☎</div><div class="gg-label" id="govPhoneName">수영구청<br>대표전화</div>
         </a>
       </div>
-      <div class="gov-foot">지자체 데이터 연동 시 실제 위치 기반 <b>대피소·관광 콘텐츠</b>로 자동 전환됩니다.</div>
+      <div class="gov-foot">지자체 데이터 연동 시 실제 위치 기반 <b>대피소·주변시설 정보</b>로 자동 전환됩니다.</div>
     </div>
   </div>
 
@@ -234,7 +244,8 @@ html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
 </div>
 
 <div class="modal-bg" id="modalBg">
-  <div class="modal">    <button class="close-x" id="modalClose">✕</button>
+  <div class="modal">
+    <button class="close-x" id="modalClose">✕</button>
     <h3 id="mName"></h3>
     <div class="sub" id="mMeta"></div>
     <div class="actions">
@@ -293,6 +304,7 @@ function haversineKm(lat1, lon1, lat2, lon2) {
   var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return EARTH_R_KM * c;
 }
+
 function destinationPoint(lat1, lon1, bearingDeg, distKm) {
   var dR = distKm / EARTH_R_KM;
   var brng = toRad(bearingDeg);
@@ -352,7 +364,8 @@ var NAME_PARTS = {
 var STORES = [];
 function buildStores(centerPt, areaLabel) {
   var areaShort = (areaLabel || '부산광역시 수영구').split(' ').pop(); // "부산광역시 수영구" → "수영구"
-  var out = [];  var id = 1;
+  var out = [];
+  var id = 1;
   for (var i = 0; i < 42; i += 1) {
     var cat = CATS[Math.floor(rand() * CATS.length)];
     var bearing = rand() * 360;
@@ -411,7 +424,8 @@ function mapIndsToCat(lclsNm, mclsNm) {
   return { key: 'etc', icon: '🏬' };
 }
 
-/* 공공데이터포털 상가정보 API에서 반경 내 실제 업체 목록을 가져온다. 실패 시 예외를 던진다. */function fetchRealStores(centerPt, radiusKm) {
+/* 공공데이터포털 상가정보 API에서 반경 내 실제 업체 목록을 가져온다. 실패 시 예외를 던진다. */
+function fetchRealStores(centerPt, radiusKm) {
   var radiusM = Math.min(Math.max(radiusKm, 0.05) * 1000, SANGGA_CFG.maxRadiusM);
   var url = SANGGA_CFG.baseUrl +
     '?serviceKey=' + encodeURIComponent(SANGGA_CFG.serviceKey) +
@@ -470,7 +484,8 @@ function updateDataSourceBadge() {
   var el = document.getElementById('dataSourceBadge');
   if (!el) return;
   el.textContent = usingRealSangga ? '공공데이터 연동' : '목업 데이터';
-  el.classList.toggle('real', usingRealSangga);}
+  el.classList.toggle('real', usingRealSangga);
+}
 
 /* ───────── 실제 온라인 지도 (Leaflet + OpenStreetMap 타일) ─────────
    네트워크가 연결된 환경에서 실제 지도 타일을 불러온다.
@@ -530,6 +545,7 @@ function ensureLeafletMap(containerId) {
   var circleLabel = L.tooltip({
     permanent: true, direction: 'right', className: 'radius-label', offset: [0, 0]
   }).setLatLng([CENTER.lat, CENTER.lon]);
+
   var rec = { map: map, centerMarker: centerMarker, circle: circle, circleLabel: circleLabel, poiMarkers: [] };
   leafletMaps[containerId] = rec;
   return rec;
@@ -589,6 +605,7 @@ function filterAndSort(radiusKm, category, keyword) {
 
 /* ───────── 상태 ───────── */
 var state = { radiusKm: 1, category: 'all', keyword: '' };
+
 function renderRadiusChips() {
   var wrap = document.getElementById('radiusChips');
   var options = [{ label: '500m', km: 0.5 }, { label: '1km', km: 1 }, { label: '3km', km: 3 }, { label: '5km', km: 5 }];
@@ -648,6 +665,7 @@ function renderResults() {
   }
   drawMap('mapCanvas2', state.radiusKm, results.map(function (r) { return r.store; }));
 }
+
 /* ───────── 상세 모달 ───────── */
 var currentStore = null;
 function openModal(store, distLabel) {
@@ -706,7 +724,8 @@ document.getElementById('kwInput').addEventListener('keydown', function (e) {
   }
 });
 
-/* ───────── TTS (Web Speech API) ───────── */document.getElementById('ttsBtn').addEventListener('click', function () {
+/* ───────── TTS (Web Speech API) ───────── */
+document.getElementById('ttsBtn').addEventListener('click', function () {
   var btn = this;
   if (!('speechSynthesis' in window)) {
     showToast('이 브라우저는 음성 안내를 지원하지 않습니다.');
@@ -765,7 +784,8 @@ function suyeongTourspots() {
 function genericShelters(distName) {
   return buildGovList(
     5,
-    [distName + '청 별관 대피소', distName + ' 관내 초등학교 대피소', distName + ' 주민센터 대피소', 'CCTV 관내 사거리 1', 'CCTV 관내 사거리 2'],    ['🛟', '🛟', '🛟', '📷', '📷'],
+    [distName + '청 별관 대피소', distName + ' 관내 초등학교 대피소', distName + ' 주민센터 대피소', 'CCTV 관내 사거리 1', 'CCTV 관내 사거리 2'],
+    ['🛟', '🛟', '🛟', '📷', '📷'],
     ['민방위 비상대피소', '민방위 비상대피소 · 학교시설', '민방위 비상대피소 · 주민센터', '방범·재난 감시 CCTV', '방범·재난 감시 CCTV']
   );
 }
@@ -777,8 +797,42 @@ function genericTourspots(distName) {
     ['관내 대표 근린공원', '도보 산책 코스', '카페·문화시설 밀집 구간', '관내 전망 명소']
   );
 }
+function suyeongRestrooms() {
+  return buildGovList(
+    4,
+    ['광안리해변 공중화장실', '민락수변공원 공중화장실', '남천동로 공영화장실', '수영교차로 공중화장실'],
+    ['🚻', '🚻', '🚻', '🚻'],
+    ['24시간 개방 · 장애인 화장실 구비', '야간 조명 있음', '공영주차장 인접', '버스정류장 인접']
+  );
+}
+function suyeongParkings() {
+  return buildGovList(
+    4,
+    ['수영구청 공영주차장', '남천동 공영주차장', '광안리해변 공영주차장', '민락수변공원 주차장'],
+    ['🅿️', '🅿️', '🅿️', '🅿️'],
+    ['최초 30분 무료 · 시간당 1,000원', '거주자 우선 구역 포함', '성수기 혼잡 · 만차 잦음', '2시간 무료']
+  );
+}
+function genericRestrooms(distName) {
+  return buildGovList(
+    3,
+    [distName + ' 관내 공중화장실 1', distName + ' 관내 공중화장실 2', distName + ' 지하철역 화장실'],
+    ['🚻', '🚻', '🚻'],
+    ['24시간 개방', '장애인 화장실 구비', '역사 내 위치']
+  );
+}
+function genericParkings(distName) {
+  return buildGovList(
+    3,
+    [distName + ' 공영주차장', distName + ' 공영주차장 2', distName + ' 노상주차장'],
+    ['🅿️', '🅿️', '🅿️'],
+    ['시간당 요금 부과', '거주자 우선 구역 포함', '단기 주정차용']
+  );
+}
 var SHELTERS = suyeongShelters();
 var TOURSPOTS = suyeongTourspots();
+var RESTROOMS = suyeongRestrooms();
+var PARKINGS = suyeongParkings();
 
 /* ───────── 구청 자동 판별용 지자체 목록 (GPS 최근접 매칭) ───────── */
 var DISTRICTS = [
@@ -802,21 +856,25 @@ function nearestDistrict(lat, lon) {
 }
 
 function applyDistrict(district) {
-  document.getElementById('govTitleName').textContent = district.short + '청';
+  document.getElementById('govTitleName').textContent = district.short;
   document.getElementById('govSubText').textContent =
-    '이 위치와 가장 가까운 ' + district.name + '에서 제공하는 안전·관광 정보입니다. (데모 목업 링크)';
-  document.getElementById('govSafetyName').textContent = district.short + ' 안전지도';
-  document.getElementById('govTourName').textContent = district.short + ' 관광·둘레길 안내';
-  document.getElementById('govPhoneName').textContent = district.short + '청 대표전화';
-  document.getElementById('govPhoneDesc').textContent = district.phone + ' · ' + district.deptDesc;
+    '이 위치와 가장 가까운 ' + district.name + ' 기준 실시간 안내입니다. (데모 목업 링크)';
+  document.getElementById('govSafetyName').innerHTML = district.short + '<br>안전지도';
+  document.getElementById('govTourName').innerHTML = district.short + '<br>관광정보';
+  document.getElementById('govPhoneName').innerHTML = district.short + '청<br>대표전화';
   document.getElementById('govPhoneCard').setAttribute('href', 'tel:' + district.phone.replace(/-/g, ''));
+  document.getElementById('govPhoneCard').setAttribute('title', district.phone + ' · ' + district.deptDesc);
 
   if (district.short === '수영구') {
     SHELTERS = suyeongShelters();
     TOURSPOTS = suyeongTourspots();
+    RESTROOMS = suyeongRestrooms();
+    PARKINGS = suyeongParkings();
   } else {
     SHELTERS = genericShelters(district.short);
     TOURSPOTS = genericTourspots(district.short);
+    RESTROOMS = genericRestrooms(district.short);
+    PARKINGS = genericParkings(district.short);
   }
 }
 var CIVIL_TYPES = ['가로등 고장', '도로 파손·포트홀', '불법주정차', '쓰레기 무단투기', '보도블럭 파손', '기타 안전 위험'];
@@ -824,7 +882,8 @@ var civilReports = [];
 
 /* ───────── 구청 모달 열기/닫기 ───────── */
 function closeGovModal() {
-  document.getElementById('govModalBg').classList.remove('show');}
+  document.getElementById('govModalBg').classList.remove('show');
+}
 document.getElementById('govModalClose').addEventListener('click', closeGovModal);
 document.getElementById('govModalBg').addEventListener('click', function (e) {
   if (e.target.id === 'govModalBg') closeGovModal();
@@ -883,7 +942,8 @@ function renderCivilForm() {
     if (civilReports.length === 0) { wrap.style.display = 'none'; return; }
     wrap.style.display = 'block';
     rowsEl.innerHTML = '';
-    for (var r of civilReports) {      var row = document.createElement('div');
+    for (var r of civilReports) {
+      var row = document.createElement('div');
       row.className = 'civil-row';
       row.innerHTML =
         '<span class="cr-tag">' + r.type + '</span>' +
@@ -906,13 +966,15 @@ function renderCivilForm() {
 
 /* ───────── 구청 안전·관광 카드 클릭 연결 ───────── */
 var currentDistrict = DISTRICTS[0]; // 기본값: 수영구
-var govCards = document.querySelectorAll('#govCards .gov-card[data-gov]');
+var govCards = document.querySelectorAll('#govCards .gg-item[data-gov]');
 for (var gc of govCards) {
   gc.addEventListener('click', function (e) {
     e.preventDefault();
     var kind = this.getAttribute('data-gov');
     if (kind === 'safety') renderGovList(currentDistrict.short + ' 안전지도', SHELTERS);
-    else if (kind === 'tour') renderGovList(currentDistrict.short + ' 관광·둘레길 안내', TOURSPOTS);
+    else if (kind === 'tour') renderGovList(currentDistrict.short + ' 관광정보', TOURSPOTS);
+    else if (kind === 'restroom') renderGovList(currentDistrict.short + ' 공중화장실', RESTROOMS);
+    else if (kind === 'parking') renderGovList(currentDistrict.short + ' 주차장', PARKINGS);
     else if (kind === 'civil') renderCivilForm();
   });
 }
@@ -943,6 +1005,7 @@ function onGpsSuccess(btn, pos) {
   btn.textContent = '📍 GPS 사용 중 (다시 갱신)';
   setGpsStatus('최근접 지자체: ' + currentDistrict.short + ' (약 ' + distLabelOf(nd.distKm) + ')');
   showToast('GPS 위치를 확인했습니다 → ' + currentDistrict.name + ' 데이터로 전환');
+
   refreshStores(CENTER, currentDistrict.name, state.radiusKm).then(function () {
     if (document.getElementById('panel-nearby').classList.contains('active')) renderResults();
   });
@@ -1001,6 +1064,7 @@ renderCatChips();
 updateDataSourceBadge();
 refreshStores(CENTER, '부산광역시 수영구', state.radiusKm).then(function () {
   if (document.getElementById('panel-nearby').classList.contains('active')) renderResults();
-});</script>
+});
+</script>
 </body>
 </html>
