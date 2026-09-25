@@ -191,11 +191,6 @@ html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
   </div>
   <div class="warn">위급사항을 소방기관 또는 관계 행정기관에 거짓으로 알린 자는 500만원 이하 과태료가 부과됩니다.</div>
 
-  <div class="tabs">
-    <button class="tab-btn active" data-tab="mine">내 위치</button>
-    <button class="tab-btn" data-tab="nearby">주변업체</button>
-  </div>
-
   <div class="panel active" id="panel-mine">
     <div id="mapCanvas"></div>
     <div class="map-note">실시간 온라인 지도(OpenStreetMap) · 중심 마커 = 현재 번호판 위치</div>
@@ -227,7 +222,8 @@ html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
     </div>
   </div>
 
-  <div class="panel" id="panel-nearby">
+  <div class="panel active" id="panel-nearby" style="border-top:8px solid var(--bg);padding-top:16px;margin-top:4px">
+    <div class="gov-title">📍 주변업체</div>
     <div id="mapCanvas2"></div>
     <div class="chips" id="radiusChips"></div>
     <div class="cats" id="catChips"></div>
@@ -699,18 +695,7 @@ document.getElementById('mShare').addEventListener('click', function () {
   }
 });
 
-/* ───────── 탭 전환 ───────── */
-var tabBtns = document.querySelectorAll('.tab-btn');
-for (var tb of tabBtns) {
-  tb.addEventListener('click', function () {
-    for (var b of tabBtns) b.classList.remove('active');
-    this.classList.add('active');
-    var target = this.getAttribute('data-tab');
-    document.getElementById('panel-mine').classList.toggle('active', target === 'mine');
-    document.getElementById('panel-nearby').classList.toggle('active', target === 'nearby');
-    if (target === 'nearby') renderResults();
-  });
-}
+/* ───────── 한 페이지 통합: 내 위치·주변업체 동시 표시 (탭 제거됨) ───────── */
 
 /* ───────── 검색 ───────── */
 document.getElementById('kwBtn').addEventListener('click', function () {
