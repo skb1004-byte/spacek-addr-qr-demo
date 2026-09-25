@@ -45,8 +45,7 @@ html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
 .tabs button.active{color:var(--navy);border-color:var(--navy)}
 .panel{display:none;padding:14px 16px}
 .panel.active{display:block}
-#mapCanvas,#mapCanvas2{width:100%;height:220px;border-radius:12px;background:#dce7f0}
-#mapCanvas2{height:180px}
+#mapCanvas{width:100%;height:240px;border-radius:12px;background:#dce7f0}
 .leaflet-container{border-radius:12px;font-family:inherit}
 .radius-label{background:#1e3a8a;color:#fff;border:none;font-size:11px;font-weight:700;
   padding:2px 8px;border-radius:10px;box-shadow:0 1px 4px rgba(0,0,0,.25)}
@@ -224,7 +223,6 @@ html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
 
   <div class="panel active" id="panel-nearby" style="border-top:8px solid var(--bg);padding-top:16px;margin-top:4px">
     <div class="gov-title">📍 주변업체</div>
-    <div id="mapCanvas2"></div>
     <div class="chips" id="radiusChips"></div>
     <div class="cats" id="catChips"></div>
     <div class="search">
@@ -659,7 +657,7 @@ function renderResults() {
       list.appendChild(row);
     }
   }
-  drawMap('mapCanvas2', state.radiusKm, results.map(function (r) { return r.store; }));
+  drawMap('mapCanvas', state.radiusKm, results.map(function (r) { return r.store; }));
 }
 
 /* ───────── 상세 모달 ───────── */
