@@ -868,6 +868,61 @@ function nearestDistrict(lat, lon) {
   return { district: best, distKm: bestKm };
 }
 
+/* ───────── 주소 상세화용 주요 랜드마크(관공서·지하철역) ───────── */
+var LANDMARKS = {
+  '수영구': [
+    { name: '수영구청', icon: '🏛️', lat: 35.16418, lon: 129.11351 },
+    { name: '수영역(2·3호선)', icon: '🚇', lat: 35.16572, lon: 129.11361 },
+    { name: '광안역', icon: '🚇', lat: 35.15346, lon: 129.11871 },
+    { name: '민락역', icon: '🚇', lat: 35.15681, lon: 129.12688 }
+  ],
+  '해운대구': [
+    { name: '해운대구청', icon: '🏛️', lat: 35.16315, lon: 129.16354 },
+    { name: '해운대역(동해선)', icon: '🚇', lat: 35.16333, lon: 129.16333 },
+    { name: '센텀시티역', icon: '🚇', lat: 35.16929, lon: 129.13073 },
+    { name: '벡스코역', icon: '🚇', lat: 35.16929, lon: 129.13073 }
+  ],
+  '남구': [
+    { name: '부산 남구청', icon: '🏛️', lat: 35.13672, lon: 129.08428 },
+    { name: '경성대·부경대역', icon: '🚇', lat: 35.13805, lon: 129.10039 },
+    { name: '못골역', icon: '🚇', lat: 35.13457, lon: 129.10310 }
+  ],
+  '중구': [
+    { name: '부산 중구청', icon: '🏛️', lat: 35.10611, lon: 129.03225 },
+    { name: '남포역', icon: '🚇', lat: 35.09722, lon: 129.03056 },
+    { name: '중앙역', icon: '🚇', lat: 35.10111, lon: 129.03583 }
+  ],
+  '강남구': [
+    { name: '강남구청', icon: '🏛️', lat: 37.51724, lon: 127.04738 },
+    { name: '강남역', icon: '🚇', lat: 37.49793, lon: 127.02762 },
+    { name: '역삼역', icon: '🚇', lat: 37.50044, lon: 127.03633 },
+    { name: '선릉역', icon: '🚇', lat: 37.50440, lon: 127.04910 }
+  ],
+  '종로구': [
+    { name: '종로구청', icon: '🏛️', lat: 37.57346, lon: 126.97940 },
+    { name: '종로3가역', icon: '🚇', lat: 37.57094, lon: 126.99178 },
+    { name: '광화문역', icon: '🚇', lat: 37.57083, lon: 126.97639 }
+  ],
+  '남양주시': [
+    { name: '남양주시청', icon: '🏛️', lat: 37.63603, lon: 127.21652 },
+    { name: '별내역', icon: '🚇', lat: 37.63444, lon: 127.12750 },
+    { name: '다산역', icon: '🚇', lat: 37.61944, lon: 127.15083 }
+  ]
+};
+/* 현재 위치와 가장 가까운 랜드마크(관공서/지하철역)를 찾아 "OOO 인근" 문구를 만든다 */
+function nearestLandmark(lat, lon, districtShort) {
+  var list = LANDMARKS[districtShort];
+  if (!list || list.length === 0) return null;
+  var best = list[0];
+  var bestKm = haversineKm(lat, lon, best.lat, best.lon);
+  for (var i = 1; i < list.length; i += 1) {
+    var p = list[i];
+    var km = haversineKm(lat, lon, p.lat, p.lon);
+    if (km < bestKm) { bestKm = km; best = p; }
+  }
+  return { landmark: best, distKm: bestKm };
+}
+
 function applyDistrict(district) {
   document.getElementById('govTitleName').textContent = district.short;
   document.getElementById('govSubText').textContent =
@@ -1002,6 +1057,8 @@ var gpsActive = false;
 function setGpsStatus(text) {
   document.getElementById('gpsStatus').textContent = text;
 }
+function walkMinutes(km) { return Math.max(1, Math.round(km * 1000 / 67)); }
+
 function onGpsSuccess(pos) {
   var lat = pos.coords.latitude;
   var lon = pos.coords.longitude;
@@ -1012,9 +1069,16 @@ function onGpsSuccess(pos) {
   currentDistrict = nd.district;
   applyDistrict(currentDistrict);
 
+  var nl = nearestLandmark(lat, lon, currentDistrict.short);
+  var landmarkText = nl
+    ? nl.landmark.icon + ' ' + nl.landmark.name + ' 인근(도보 약 ' + walkMinutes(nl.distKm) + '분)'
+    : '';
+
   var addrEl = document.getElementById('addrText');
-  addrEl.innerHTML = '<span class="city">' + currentDistrict.name + ' 인근</span>GPS 실시간 위치 (오차 ±' + acc + 'm)';
-  applyAddrLabel(currentDistrict.name + ' GPS 실시간 위치(위도 ' + lat.toFixed(5) + ', 경도 ' + lon.toFixed(5) + ')');
+  addrEl.innerHTML = '<span class="city">' + currentDistrict.name + ' 인근</span>' +
+    (landmarkText ? landmarkText + ' · ' : '') + 'GPS 실시간 위치 (오차 ±' + acc + 'm)';
+  applyAddrLabel(currentDistrict.name + (nl ? ' ' + nl.landmark.name + ' 인근' : '') +
+    ' GPS 실시간 위치(위도 ' + lat.toFixed(5) + ', 경도 ' + lon.toFixed(5) + ')');
 
   drawMap('mapCanvas', 1, null);
   gpsActive = true;
