@@ -27,10 +27,6 @@ html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
   align-items:center;justify-content:center}
 .tts-btn.playing{background:#fff;color:var(--navy)}
 .gps-row{display:flex;align-items:center;gap:8px;margin-top:10px;flex-wrap:wrap}
-.gps-btn{flex-shrink:0;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.35);
-  color:#fff;font-size:12.5px;font-weight:700;padding:7px 12px;border-radius:20px;cursor:pointer}
-.gps-btn.on{background:#fff;color:var(--navy)}
-.gps-btn:disabled{opacity:.6;cursor:default}
 .gps-status{font-size:11px;opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sos{display:flex;gap:10px;padding:14px 18px;border-bottom:1px solid var(--line)}
 .sos a{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:12px 0;
@@ -170,7 +166,6 @@ html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
   .sos a{font-size:13.5px;padding:10px 0}
   .cat{min-width:50px;padding:7px 8px}
   .chip{padding:6px 11px;font-size:12.5px}
-  .gps-btn{font-size:11.5px;padding:6px 10px}
 }
 @media (min-width:481px){
   body{background:#dfe3ea}
@@ -197,7 +192,6 @@ html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
       <button class="tts-btn" id="ttsBtn" title="음성으로 듣기">🔊</button>
     </div>
     <div class="gps-row">
-      <button class="gps-btn" id="gpsBtn">📍 내 GPS 위치로 전환</button>
       <span class="gps-status" id="gpsStatus"></span>
     </div>
   </div>
@@ -1012,7 +1006,7 @@ var gpsActive = false;
 function setGpsStatus(text) {
   document.getElementById('gpsStatus').textContent = text;
 }
-function onGpsSuccess(btn, pos) {
+function onGpsSuccess(pos) {
   var lat = pos.coords.latitude;
   var lon = pos.coords.longitude;
   var acc = Math.round(pos.coords.accuracy || 0);
@@ -1028,9 +1022,6 @@ function onGpsSuccess(btn, pos) {
 
   drawMap('mapCanvas', 1, null);
   gpsActive = true;
-  btn.classList.add('on');
-  btn.disabled = false;
-  btn.textContent = '📍 GPS 사용 중 (다시 갱신)';
   setGpsStatus('최근접 지자체: ' + currentDistrict.short + ' (약 ' + distLabelOf(nd.distKm) + ')');
   showToast('GPS 위치를 확인했습니다 → ' + currentDistrict.name + ' 데이터로 전환');
 
@@ -1046,7 +1037,7 @@ function gpsErrorReason(err) {
   return '위치 확인에 실패했습니다.';
 }
 
-function requestGps(btn, silent) {
+function requestGps(silent) {
   if (!('geolocation' in navigator)) {
     if (!silent) showToast('이 브라우저/환경은 GPS(위치 정보)를 지원하지 않습니다.');
     setGpsStatus('미지원 환경');
@@ -1057,22 +1048,17 @@ function requestGps(btn, silent) {
     setGpsStatus('비보안 연결(HTTP)');
     return;
   }
-  btn.disabled = true;
-  btn.textContent = '📍 정밀 위치 확인 중...';
   setGpsStatus('GPS 신호 대기 중... (최대 12초)');
 
   navigator.geolocation.getCurrentPosition(
-    function (pos) { onGpsSuccess(btn, pos); },
+    function (pos) { onGpsSuccess(pos); },
     function (err1) {
       // 1차(고정밀 GPS) 실패/시간초과 시 → 2차: Wi-Fi/기지국 기반 저정밀 위치로 자동 재시도
       console.error('GPS 1차 실패:', err1);
-      btn.textContent = '📍 네트워크 기반 위치로 재시도 중...';
       setGpsStatus('GPS 신호가 약해 네트워크 기반 위치로 재시도합니다...');
       navigator.geolocation.getCurrentPosition(
-        function (pos) { onGpsSuccess(btn, pos); },
+        function (pos) { onGpsSuccess(pos); },
         function (err2) {
-          btn.disabled = false;
-          btn.textContent = '📍 내 GPS 위치로 전환';
           if (!silent) showToast(gpsErrorReason(err2));
           setGpsStatus('');
           console.error('GPS 2차 실패:', err2);
@@ -1083,9 +1069,6 @@ function requestGps(btn, silent) {
     { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
   );
 }
-document.getElementById('gpsBtn').addEventListener('click', function () {
-  requestGps(this, false);
-});
 
 /* ───────── 초기 렌더 ───────── */
 drawMap('mapCanvas', 1, null);
@@ -1096,7 +1079,7 @@ refreshStores(CENTER, '부산광역시 수영구', state.radiusKm).then(function
   if (document.getElementById('panel-nearby').classList.contains('active')) renderResults();
 });
 /* 앱 진입 시 자동으로 GPS 내 위치로 전환 시도 (권한 거부/실패 시 조용히 기본 주소 유지) */
-requestGps(document.getElementById('gpsBtn'), true);
+requestGps(true);
 </script>
 </body>
 </html>
