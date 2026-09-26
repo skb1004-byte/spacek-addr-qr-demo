@@ -51,13 +51,9 @@ html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
   padding:2px 8px;border-radius:10px;box-shadow:0 1px 4px rgba(0,0,0,.25)}
 .radius-label::before{border-right-color:#1e3a8a}
 .map-note{font-size:10.5px;color:var(--sub);text-align:center;margin-top:6px}
-.sos-icons{display:flex;gap:14px;padding:16px 18px 10px;justify-content:center}
-.sos-icon{display:flex;flex-direction:column;align-items:center;gap:6px;text-decoration:none;color:inherit;flex:1;max-width:120px}
-.sos-icon .sic{width:60px;height:60px;border-radius:50%;display:flex;align-items:center;justify-content:center;
-  font-size:28px;color:#fff;box-shadow:0 3px 10px rgba(0,0,0,.18)}
-.sos-icon.police .sic{background:#2255aa}
-.sos-icon.fire .sic{background:var(--red)}
-.sos-icon .slabel{font-size:12.5px;font-weight:700}
+.sos-banner{display:flex;gap:8px;padding:14px 18px 6px}
+.sos-half{flex:1;display:block;border-radius:14px;overflow:hidden;aspect-ratio:768/874;text-decoration:none}
+.sos-half img{width:100%;height:100%;object-fit:cover;display:block}
 .gov-section{margin-top:20px;border-top:8px solid var(--bg);padding-top:16px}
 .gov-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px 8px;margin-top:6px}
 .gov-grid .gg-item{display:flex;flex-direction:column;align-items:center;gap:7px;text-decoration:none;
@@ -110,11 +106,12 @@ html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
   background:#fff;font-size:13px;font-weight:600;color:var(--sub);cursor:pointer;white-space:nowrap}
 .chip.active{background:var(--navy);border-color:var(--navy);color:#fff}
 .cats{display:flex;gap:8px;overflow-x:auto;padding-bottom:12px}
-.cat{flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:4px;
-  padding:8px 10px;border-radius:10px;border:1px solid var(--line);background:#fff;
-  cursor:pointer;font-size:11px;color:var(--sub);min-width:56px}
-.cat.active{border-color:var(--navy);background:#eef2fb;color:var(--navy);font-weight:700}
-.cat .ic{font-size:18px}
+.cat-card{flex-shrink:0;width:92px;aspect-ratio:3/4;border-radius:14px;overflow:hidden;position:relative;
+  cursor:pointer;background:#dce7f0;box-shadow:0 0 0 2px transparent inset}
+.cat-card img{width:100%;height:100%;object-fit:cover;display:block}
+.cat-card .cc-label{position:absolute;left:0;right:0;bottom:0;background:linear-gradient(transparent,rgba(0,0,0,.6));
+  color:#fff;font-size:11.5px;font-weight:700;text-align:center;padding:14px 2px 6px}
+.cat-card.active{outline:3px solid var(--navy);outline-offset:-3px}
 .search{display:flex;gap:8px;margin-bottom:10px}
 .search input{flex:1;padding:10px 12px;border:1px solid var(--line);border-radius:8px;font-size:14px}
 .search button{padding:0 14px;border-radius:8px;border:1px solid var(--navy);background:var(--navy);color:#fff;font-weight:600}
@@ -159,10 +156,8 @@ html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
 .img-banner .ib-tag{position:absolute;left:10px;bottom:10px;background:rgba(30,58,138,.88);color:#fff;
   font-size:12.5px;font-weight:700;padding:6px 12px;border-radius:20px}
 .hero-wrap{padding:12px 14px 0}
-.sos-img-wrap{padding:0 18px 14px;max-width:240px;margin:0 auto}
 .gov-banners{display:flex;flex-direction:column;align-items:center;gap:10px;margin:10px 0 14px}
 .gov-banners .img-banner.wide{width:100%}
-.gov-banners .img-banner.square{width:150px}
 .biz-hero{margin-bottom:12px}
 
 @media (max-width:360px){
@@ -204,16 +199,15 @@ html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
     </div>
   </div>
 
-  <div class="sos-icons">
-    <a class="sos-icon police" href="tel:112"><div class="sic">🚓</div><div class="slabel">112 신고</div></a>
-    <a class="sos-icon fire" id="sms119Link" href="sms:119?body=%5B%EA%B8%B4%EA%B8%89%5D%20%EB%B6%80%EC%82%B0%EA%B4%91%EC%97%AD%EC%8B%9C%20%EC%88%98%EC%98%81%EA%B5%AC%20%EB%82%A8%EC%B2%9C%EB%8F%99%EB%A1%9C%20100%20%EC%9C%84%EC%B9%98%EC%97%90%EC%84%9C%20%EA%B8%B4%EA%B8%89%EC%83%81%ED%99%A9%20%EB%B0%9C%EC%83%9D"><div class="sic">🚒</div><div class="slabel">119 신고</div></a>
+  <div class="sos-banner">
+    <a class="sos-half" href="tel:112">
+      <img src="images/sos-112.webp" alt="경찰 112 신고 · 범죄·위급상황·긴급구조" loading="lazy">
+    </a>
+    <a class="sos-half" id="sms119Link" href="sms:119?body=%5B%EA%B8%B4%EA%B8%89%5D%20%EB%B6%80%EC%82%B0%EA%B4%91%EC%97%AD%EC%8B%9C%20%EC%88%98%EC%98%81%EA%B5%AC%20%EB%82%A8%EC%B2%9C%EB%8F%99%EB%A1%9C%20100%20%EC%9C%84%EC%B9%98%EC%97%90%EC%84%9C%20%EA%B8%B4%EA%B8%89%EC%83%81%ED%99%A9%20%EB%B0%9C%EC%83%9D">
+      <img src="images/sos-119.webp" alt="소방 119 신고 · 화재·구조·구급·응급상황" loading="lazy">
+    </a>
   </div>
   <div class="warn">위급사항을 소방기관 또는 관계 행정기관에 거짓으로 알린 자는 500만원 이하 과태료가 부과됩니다.</div>
-  <div class="sos-img-wrap">
-    <div class="img-banner square">
-      <img src="images/02-emergency-112-119.webp" alt="112·119 신고 시 정확한 위치 전달" loading="lazy">
-    </div>
-  </div>
 
   <div class="panel active" id="panel-mine">
     <div id="mapCanvas"></div>
@@ -225,11 +219,8 @@ html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
 
       <div class="gov-banners">
         <div class="img-banner wide clickable" id="tourBanner">
-          <img src="images/03-suyeong-tourism.webp" alt="수영구 관광정보 · 명소·이동정보 연결" loading="lazy">
-          <div class="ib-tag">🗺️ 수영구 관광정보 보기</div>
-        </div>
-        <div class="img-banner square clickable" id="civicMapBanner">
-          <img src="images/04-nearby-civic-map.webp" alt="지도 기반 공중화장실·주차장·생활민원 안내" loading="lazy">
+          <img src="images/03-suyeong-tourism.webp" alt="관광정보 · 명소·이동정보 연결" loading="lazy">
+          <div class="ib-tag">🗺️ <span id="tourBannerDistrict">수영구</span> 관광정보 보기</div>
         </div>
       </div>
 
@@ -659,8 +650,10 @@ function renderCatChips() {
   wrap.innerHTML = '';
   for (var o of options) {
     var el = document.createElement('div');
-    el.className = 'cat' + (state.category === o.key ? ' active' : '');
-    el.innerHTML = '<span class="ic">' + o.icon + '</span><span>' + o.label + '</span>';
+    el.className = 'cat-card' + (state.category === o.key ? ' active' : '');
+    el.innerHTML =
+      '<img src="images/cat-' + o.key + '.webp" alt="' + o.label + '" loading="lazy">' +
+      '<div class="cc-label">' + o.label + '</div>';
     el.addEventListener('click', function (key) {
       return function () { state.category = key; renderCatChips(); renderResults(); };
     }(o.key));
@@ -885,6 +878,7 @@ function applyDistrict(district) {
   document.getElementById('govPhoneName').innerHTML = district.short + '청<br>대표전화';
   document.getElementById('govPhoneCard').setAttribute('href', 'tel:' + district.phone.replace(/-/g, ''));
   document.getElementById('govPhoneCard').setAttribute('title', district.phone + ' · ' + district.deptDesc);
+  document.getElementById('tourBannerDistrict').textContent = district.short;
 
   if (district.short === '수영구') {
     SHELTERS = suyeongShelters();
@@ -1001,9 +995,8 @@ for (var gc of govCards) {
     openGovKind(this.getAttribute('data-gov'));
   });
 }
-/* 사진 배너: 관광정보 배너 → 관광정보 목록, 생활지도 배너 → 공중화장실/주차장 요약(화장실 목록으로 진입) */
+/* 사진 배너: 관광정보 배너 → 관광정보 목록 */
 document.getElementById('tourBanner').addEventListener('click', function () { openGovKind('tour'); });
-document.getElementById('civicMapBanner').addEventListener('click', function () { openGovKind('restroom'); });
 
 /* ───────── GPS 활성화: 실제 기기 위치 기반으로 전환 ───────── */
 var gpsActive = false;
