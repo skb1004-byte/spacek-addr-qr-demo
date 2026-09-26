@@ -151,6 +151,20 @@ html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
 .toast{background:#222;color:#fff;padding:10px 14px;border-radius:8px;font-size:13px;
   box-shadow:0 4px 14px rgba(0,0,0,.25);opacity:.97}
 
+.img-banner{border-radius:14px;overflow:hidden;position:relative;background:#dce7f0}
+.img-banner img{width:100%;height:100%;display:block;object-fit:cover}
+.img-banner.wide{aspect-ratio:16/9}
+.img-banner.square{aspect-ratio:1/1}
+.img-banner.clickable{cursor:pointer}
+.img-banner .ib-tag{position:absolute;left:10px;bottom:10px;background:rgba(30,58,138,.88);color:#fff;
+  font-size:12.5px;font-weight:700;padding:6px 12px;border-radius:20px}
+.hero-wrap{padding:12px 14px 0}
+.sos-img-wrap{padding:0 18px 14px;max-width:240px;margin:0 auto}
+.gov-banners{display:flex;flex-direction:column;align-items:center;gap:10px;margin:10px 0 14px}
+.gov-banners .img-banner.wide{width:100%}
+.gov-banners .img-banner.square{width:150px}
+.biz-hero{margin-bottom:12px}
+
 @media (max-width:360px){
   .addr{font-size:17px}
   .sos a{font-size:13.5px;padding:10px 0}
@@ -167,6 +181,12 @@ html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
 </head>
 <body>
 <div class="app">
+  <div class="hero-wrap">
+    <div class="img-banner wide">
+      <img src="images/01-hero-smart-address.webp" alt="주소 QR을 스캔해 위치·안전·생활정보로 연결" loading="lazy">
+      <div class="ib-tag">📍 주소 QR → 위치·안전·생활정보 연결</div>
+    </div>
+  </div>
   <div class="banner">실제 OpenStreetMap 지도를 사용하는 온라인 데모입니다. 업체·구청 데이터는 목업이며, 실서비스는 카카오 API·상가정보 DB와 연동됩니다.</div>
 
   <div class="header">
@@ -189,6 +209,11 @@ html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
     <a class="sos-icon fire" id="sms119Link" href="sms:119?body=%5B%EA%B8%B4%EA%B8%89%5D%20%EB%B6%80%EC%82%B0%EA%B4%91%EC%97%AD%EC%8B%9C%20%EC%88%98%EC%98%81%EA%B5%AC%20%EB%82%A8%EC%B2%9C%EB%8F%99%EB%A1%9C%20100%20%EC%9C%84%EC%B9%98%EC%97%90%EC%84%9C%20%EA%B8%B4%EA%B8%89%EC%83%81%ED%99%A9%20%EB%B0%9C%EC%83%9D"><div class="sic">🚒</div><div class="slabel">119 신고</div></a>
   </div>
   <div class="warn">위급사항을 소방기관 또는 관계 행정기관에 거짓으로 알린 자는 500만원 이하 과태료가 부과됩니다.</div>
+  <div class="sos-img-wrap">
+    <div class="img-banner square">
+      <img src="images/02-emergency-112-119.webp" alt="112·119 신고 시 정확한 위치 전달" loading="lazy">
+    </div>
+  </div>
 
   <div class="panel active" id="panel-mine">
     <div id="mapCanvas"></div>
@@ -197,6 +222,17 @@ html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
     <div class="gov-section">
       <div class="gov-title">🏛️ 내 주변 위치 정보 <span class="badge" id="govBadge"><span id="govTitleName">수영구</span> 연동</span></div>
       <div class="gov-sub" id="govSubText">이 주소가 속한 부산광역시 수영구 기준 실시간 안내입니다. (데모 목업 링크)</div>
+
+      <div class="gov-banners">
+        <div class="img-banner wide clickable" id="tourBanner">
+          <img src="images/03-suyeong-tourism.webp" alt="수영구 관광정보 · 명소·이동정보 연결" loading="lazy">
+          <div class="ib-tag">🗺️ 수영구 관광정보 보기</div>
+        </div>
+        <div class="img-banner square clickable" id="civicMapBanner">
+          <img src="images/04-nearby-civic-map.webp" alt="지도 기반 공중화장실·주차장·생활민원 안내" loading="lazy">
+        </div>
+      </div>
+
       <div class="gov-grid" id="govCards">
         <button class="gg-item" data-gov="safety">
           <div class="gg-ic">🛟</div><div class="gg-label" id="govSafetyName">수영구<br>안전지도</div>
@@ -222,6 +258,9 @@ html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
 
   <div class="panel active" id="panel-nearby" style="border-top:8px solid var(--bg);padding-top:16px;margin-top:4px">
     <div class="gov-title">📍 주변업체</div>
+    <div class="img-banner wide biz-hero">
+      <img src="images/05-nearby-business.webp" alt="반경 검색으로 음식점·카페·상점·약국 등 주변 상권 탐색" loading="lazy">
+    </div>
     <div class="chips" id="radiusChips"></div>
     <div class="cats" id="catChips"></div>
     <div class="search">
@@ -948,18 +987,23 @@ function renderCivilForm() {
 
 /* ───────── 구청 안전·관광 카드 클릭 연결 ───────── */
 var currentDistrict = DISTRICTS[0]; // 기본값: 수영구
+function openGovKind(kind) {
+  if (kind === 'safety') renderGovList(currentDistrict.short + ' 안전지도', SHELTERS);
+  else if (kind === 'tour') renderGovList(currentDistrict.short + ' 관광정보', TOURSPOTS);
+  else if (kind === 'restroom') renderGovList(currentDistrict.short + ' 공중화장실', RESTROOMS);
+  else if (kind === 'parking') renderGovList(currentDistrict.short + ' 주차장', PARKINGS);
+  else if (kind === 'civil') renderCivilForm();
+}
 var govCards = document.querySelectorAll('#govCards .gg-item[data-gov]');
 for (var gc of govCards) {
   gc.addEventListener('click', function (e) {
     e.preventDefault();
-    var kind = this.getAttribute('data-gov');
-    if (kind === 'safety') renderGovList(currentDistrict.short + ' 안전지도', SHELTERS);
-    else if (kind === 'tour') renderGovList(currentDistrict.short + ' 관광정보', TOURSPOTS);
-    else if (kind === 'restroom') renderGovList(currentDistrict.short + ' 공중화장실', RESTROOMS);
-    else if (kind === 'parking') renderGovList(currentDistrict.short + ' 주차장', PARKINGS);
-    else if (kind === 'civil') renderCivilForm();
+    openGovKind(this.getAttribute('data-gov'));
   });
 }
+/* 사진 배너: 관광정보 배너 → 관광정보 목록, 생활지도 배너 → 공중화장실/주차장 요약(화장실 목록으로 진입) */
+document.getElementById('tourBanner').addEventListener('click', function () { openGovKind('tour'); });
+document.getElementById('civicMapBanner').addEventListener('click', function () { openGovKind('restroom'); });
 
 /* ───────── GPS 활성화: 실제 기기 위치 기반으로 전환 ───────── */
 var gpsActive = false;
