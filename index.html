@@ -59,7 +59,10 @@ html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
 .gov-grid .gg-item{display:flex;flex-direction:column;text-decoration:none;
   color:inherit;cursor:pointer;background:#fff;border:none;font-family:inherit;padding:0;
   border-radius:14px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.08)}
-.gov-grid .gg-photo{width:100%;aspect-ratio:512/230;object-fit:cover;display:block;background:#dce7f0}
+.gov-grid .gg-photo-wrap{position:relative;overflow:hidden}
+.gov-grid .gg-photo-wrap::after{content:'';position:absolute;left:0;right:0;bottom:-1px;height:42%;
+  background:linear-gradient(to bottom, rgba(255,255,255,0), #fff 88%);pointer-events:none}
+.gov-grid .gg-photo{width:100%;aspect-ratio:512/255;object-fit:cover;display:block;background:#dce7f0}
 .gov-grid .gg-cap{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:8px 10px}
 .gov-grid .gg-label{font-size:12px;font-weight:700;text-align:left;line-height:1.3}
 .gov-grid .gg-arrow{width:24px;height:24px;border-radius:50%;border:1.5px solid var(--line);
@@ -229,27 +232,27 @@ html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
 
       <div class="gov-grid" id="govCards">
         <button class="gg-item" data-gov="safety">
-          <img class="gg-photo" src="images/gov-safety.webp" alt="안전지도" loading="lazy">
+          <div class="gg-photo-wrap"><img class="gg-photo" src="images/gov-safety.webp" alt="안전지도" loading="lazy"></div>
           <div class="gg-cap"><div class="gg-label" id="govSafetyName">수영구<br>안전지도</div><div class="gg-arrow">→</div></div>
         </button>
         <button class="gg-item" data-gov="tour">
-          <img class="gg-photo" src="images/gov-tour.webp" alt="관광정보" loading="lazy">
+          <div class="gg-photo-wrap"><img class="gg-photo" src="images/gov-tour.webp" alt="관광정보" loading="lazy"></div>
           <div class="gg-cap"><div class="gg-label" id="govTourName">수영구<br>관광정보</div><div class="gg-arrow">→</div></div>
         </button>
         <button class="gg-item" data-gov="restroom">
-          <img class="gg-photo" src="images/gov-restroom.webp" alt="공중화장실" loading="lazy">
+          <div class="gg-photo-wrap"><img class="gg-photo" src="images/gov-restroom.webp" alt="공중화장실" loading="lazy"></div>
           <div class="gg-cap"><div class="gg-label">공중화장실</div><div class="gg-arrow">→</div></div>
         </button>
         <button class="gg-item" data-gov="parking">
-          <img class="gg-photo" src="images/gov-parking.webp" alt="주차장" loading="lazy">
+          <div class="gg-photo-wrap"><img class="gg-photo" src="images/gov-parking.webp" alt="주차장" loading="lazy"></div>
           <div class="gg-cap"><div class="gg-label">주차장</div><div class="gg-arrow">→</div></div>
         </button>
         <button class="gg-item" data-gov="civil">
-          <img class="gg-photo" src="images/gov-civil.webp" alt="생활민원 안전신문고" loading="lazy">
+          <div class="gg-photo-wrap"><img class="gg-photo" src="images/gov-civil.webp" alt="생활민원 안전신문고" loading="lazy"></div>
           <div class="gg-cap"><div class="gg-label">생활민원<br>안전신문고</div><div class="gg-arrow">→</div></div>
         </button>
         <a class="gg-item" id="govPhoneCard" href="tel:0517103000">
-          <img class="gg-photo" src="images/gov-phone.webp" alt="대표전화" loading="lazy">
+          <div class="gg-photo-wrap"><img class="gg-photo" src="images/gov-phone.webp" alt="대표전화" loading="lazy"></div>
           <div class="gg-cap"><div class="gg-label" id="govPhoneName">수영구청<br>대표전화</div><div class="gg-arrow">☎</div></div>
         </a>
       </div>
