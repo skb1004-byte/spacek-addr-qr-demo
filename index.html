@@ -15,7 +15,6 @@ html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
 .app{max-width:480px;margin:0 auto;min-height:100vh;min-height:100dvh;background:var(--card);
   box-shadow:0 0 24px rgba(0,0,0,.08);position:relative;
   padding-bottom:calc(24px + env(safe-area-inset-bottom))}
-.banner{background:#fff3cd;color:#7a5c00;font-size:11.5px;padding:8px 14px;text-align:center;border-bottom:1px solid #f0d98a}
 .header{background:var(--navy);color:#fff;
   padding:calc(16px + env(safe-area-inset-top)) 18px 20px}
 .header .top{display:flex;justify-content:space-between;align-items:center;font-size:12px;opacity:.85;margin-bottom:10px}
@@ -188,8 +187,6 @@ html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
       <div class="ib-tag">📍 주소 QR → 위치·안전·생활정보 연결</div>
     </div>
   </div>
-  <div class="banner">실제 OpenStreetMap 지도를 사용하는 온라인 데모입니다. 업체·구청 데이터는 목업이며, 실서비스는 카카오 API·상가정보 DB와 연동됩니다.</div>
-
   <div class="header">
     <div class="top">
       <span>AISUAL</span>
@@ -1049,15 +1046,14 @@ function gpsErrorReason(err) {
   return '위치 확인에 실패했습니다.';
 }
 
-document.getElementById('gpsBtn').addEventListener('click', function () {
-  var btn = this;
+function requestGps(btn, silent) {
   if (!('geolocation' in navigator)) {
-    showToast('이 브라우저/환경은 GPS(위치 정보)를 지원하지 않습니다.');
+    if (!silent) showToast('이 브라우저/환경은 GPS(위치 정보)를 지원하지 않습니다.');
     setGpsStatus('미지원 환경');
     return;
   }
   if (!window.isSecureContext) {
-    showToast('HTTPS(보안 연결)가 아니면 위치 정보를 사용할 수 없습니다.');
+    if (!silent) showToast('HTTPS(보안 연결)가 아니면 위치 정보를 사용할 수 없습니다.');
     setGpsStatus('비보안 연결(HTTP)');
     return;
   }
@@ -1077,7 +1073,7 @@ document.getElementById('gpsBtn').addEventListener('click', function () {
         function (err2) {
           btn.disabled = false;
           btn.textContent = '📍 내 GPS 위치로 전환';
-          showToast(gpsErrorReason(err2));
+          if (!silent) showToast(gpsErrorReason(err2));
           setGpsStatus('');
           console.error('GPS 2차 실패:', err2);
         },
@@ -1086,6 +1082,9 @@ document.getElementById('gpsBtn').addEventListener('click', function () {
     },
     { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
   );
+}
+document.getElementById('gpsBtn').addEventListener('click', function () {
+  requestGps(this, false);
 });
 
 /* ───────── 초기 렌더 ───────── */
@@ -1096,6 +1095,8 @@ updateDataSourceBadge();
 refreshStores(CENTER, '부산광역시 수영구', state.radiusKm).then(function () {
   if (document.getElementById('panel-nearby').classList.contains('active')) renderResults();
 });
+/* 앱 진입 시 자동으로 GPS 내 위치로 전환 시도 (권한 거부/실패 시 조용히 기본 주소 유지) */
+requestGps(document.getElementById('gpsBtn'), true);
 </script>
 </body>
 </html>
