@@ -55,12 +55,15 @@ html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
 .sos-half{flex:1;display:block;border-radius:14px;overflow:hidden;aspect-ratio:768/874;text-decoration:none}
 .sos-half img{width:100%;height:100%;object-fit:cover;display:block}
 .gov-section{margin-top:20px;border-top:8px solid var(--bg);padding-top:16px}
-.gov-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px 8px;margin-top:6px}
-.gov-grid .gg-item{display:flex;flex-direction:column;align-items:center;gap:7px;text-decoration:none;
-  color:inherit;cursor:pointer;background:none;border:none;font-family:inherit;padding:0}
-.gov-grid .gg-ic{width:54px;height:54px;border-radius:50%;background:#eef2fb;color:var(--navy);
-  display:flex;align-items:center;justify-content:center;font-size:23px}
-.gov-grid .gg-label{font-size:11.5px;font-weight:600;text-align:center;line-height:1.3}
+.gov-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:10px}
+.gov-grid .gg-item{display:flex;flex-direction:column;text-decoration:none;
+  color:inherit;cursor:pointer;background:#fff;border:none;font-family:inherit;padding:0;
+  border-radius:14px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.gov-grid .gg-photo{width:100%;aspect-ratio:512/230;object-fit:cover;display:block;background:#dce7f0}
+.gov-grid .gg-cap{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:8px 10px}
+.gov-grid .gg-label{font-size:12px;font-weight:700;text-align:left;line-height:1.3}
+.gov-grid .gg-arrow{width:24px;height:24px;border-radius:50%;border:1.5px solid var(--line);
+  display:flex;align-items:center;justify-content:center;color:var(--navy);font-size:12px;flex-shrink:0}
 .gov-title{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:700;color:var(--navy);margin-bottom:2px}
 .gov-title .badge{background:#eef2fb;color:var(--navy);font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px}
 .gov-sub{font-size:11.5px;color:var(--sub);margin-bottom:12px}
@@ -226,22 +229,28 @@ html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
 
       <div class="gov-grid" id="govCards">
         <button class="gg-item" data-gov="safety">
-          <div class="gg-ic">🛟</div><div class="gg-label" id="govSafetyName">수영구<br>안전지도</div>
+          <img class="gg-photo" src="images/gov-safety.webp" alt="안전지도" loading="lazy">
+          <div class="gg-cap"><div class="gg-label" id="govSafetyName">수영구<br>안전지도</div><div class="gg-arrow">→</div></div>
         </button>
         <button class="gg-item" data-gov="tour">
-          <div class="gg-ic">🗺️</div><div class="gg-label" id="govTourName">수영구<br>관광정보</div>
+          <img class="gg-photo" src="images/gov-tour.webp" alt="관광정보" loading="lazy">
+          <div class="gg-cap"><div class="gg-label" id="govTourName">수영구<br>관광정보</div><div class="gg-arrow">→</div></div>
         </button>
         <button class="gg-item" data-gov="restroom">
-          <div class="gg-ic">🚻</div><div class="gg-label">공중화장실</div>
+          <img class="gg-photo" src="images/gov-restroom.webp" alt="공중화장실" loading="lazy">
+          <div class="gg-cap"><div class="gg-label">공중화장실</div><div class="gg-arrow">→</div></div>
         </button>
         <button class="gg-item" data-gov="parking">
-          <div class="gg-ic">🅿️</div><div class="gg-label">주차장</div>
+          <img class="gg-photo" src="images/gov-parking.webp" alt="주차장" loading="lazy">
+          <div class="gg-cap"><div class="gg-label">주차장</div><div class="gg-arrow">→</div></div>
         </button>
         <button class="gg-item" data-gov="civil">
-          <div class="gg-ic">🏢</div><div class="gg-label">생활민원<br>안전신문고</div>
+          <img class="gg-photo" src="images/gov-civil.webp" alt="생활민원 안전신문고" loading="lazy">
+          <div class="gg-cap"><div class="gg-label">생활민원<br>안전신문고</div><div class="gg-arrow">→</div></div>
         </button>
         <a class="gg-item" id="govPhoneCard" href="tel:0517103000">
-          <div class="gg-ic">☎</div><div class="gg-label" id="govPhoneName">수영구청<br>대표전화</div>
+          <img class="gg-photo" src="images/gov-phone.webp" alt="대표전화" loading="lazy">
+          <div class="gg-cap"><div class="gg-label" id="govPhoneName">수영구청<br>대표전화</div><div class="gg-arrow">☎</div></div>
         </a>
       </div>
     </div>
