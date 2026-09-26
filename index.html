@@ -4,6 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <title>주소QR 데모</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1e3a8a">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="주소QR">
+<link rel="icon" href="images/icon-192.png">
+<link rel="apple-touch-icon" href="images/icon-192.png">
 <style>
 :root{
   --navy:#1e3a8a; --navy-d:#152a63; --ink:#1a1a1a; --sub:#666;
@@ -1140,6 +1148,15 @@ refreshStores(CENTER, '부산광역시 수영구', state.radiusKm).then(function
 });
 /* 앱 진입 시 자동으로 GPS 내 위치로 전환 시도 (권한 거부/실패 시 조용히 기본 주소 유지) */
 requestGps(true);
+
+/* PWA: 서비스워커 등록(오프라인 캐싱 + 홈 화면 설치 지원) */
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('sw.js').catch(function (err) {
+      console.error('서비스워커 등록 실패:', err);
+    });
+  });
+}
 </script>
 </body>
 </html>

@@ -1,0 +1,17 @@
+{
+  "name": "SpaceK 주소QR 안내",
+  "short_name": "주소QR",
+  "description": "주소 QR을 스캔해 위치·안전·생활정보로 연결하는 SpaceK 스마트 주소판 서비스",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f3f5f9",
+  "theme_color": "#1e3a8a",
+  "orientation": "portrait",
+  "lang": "ko",
+  "icons": [
+    { "src": "images/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "images/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "images/icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
