@@ -165,8 +165,6 @@ html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
 .img-banner .ib-tag{position:absolute;left:10px;bottom:10px;background:rgba(30,58,138,.88);color:#fff;
   font-size:12.5px;font-weight:700;padding:6px 12px;border-radius:20px}
 .hero-wrap{padding:12px 14px 0}
-.gov-banners{display:flex;flex-direction:column;align-items:center;gap:10px;margin:10px 0 14px}
-.gov-banners .img-banner.wide{width:100%}
 
 @media (max-width:360px){
   .addr{font-size:17px}
@@ -220,13 +218,6 @@ html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
     <div class="gov-section">
       <div class="gov-title">🏛️ 내 주변 위치 정보 <span class="badge" id="govBadge"><span id="govTitleName">수영구</span> 연동</span></div>
       <div class="gov-sub" id="govSubText">이 주소가 속한 부산광역시 수영구 기준 실시간 안내입니다. (데모 목업 링크)</div>
-
-      <div class="gov-banners">
-        <div class="img-banner wide clickable" id="tourBanner">
-          <img src="images/03-suyeong-tourism.webp" alt="관광정보 · 명소·이동정보 연결" loading="lazy">
-          <div class="ib-tag">🗺️ <span id="tourBannerDistrict">수영구</span> 관광정보 보기</div>
-        </div>
-      </div>
 
       <div class="gov-grid" id="govCards">
         <button class="gg-item" data-gov="safety">
@@ -940,7 +931,6 @@ function applyDistrict(district) {
   document.getElementById('govPhoneName').innerHTML = district.short + '청<br>대표전화';
   document.getElementById('govPhoneCard').setAttribute('href', 'tel:' + district.phone.replace(/-/g, ''));
   document.getElementById('govPhoneCard').setAttribute('title', district.phone + ' · ' + district.deptDesc);
-  document.getElementById('tourBannerDistrict').textContent = district.short;
 
   if (district.short === '수영구') {
     SHELTERS = suyeongShelters();
@@ -1057,9 +1047,6 @@ for (var gc of govCards) {
     openGovKind(this.getAttribute('data-gov'));
   });
 }
-/* 사진 배너: 관광정보 배너 → 관광정보 목록 */
-document.getElementById('tourBanner').addEventListener('click', function () { openGovKind('tour'); });
-
 /* ───────── GPS 활성화: 실제 기기 위치 기반으로 전환 ───────── */
 var gpsActive = false;
 function setGpsStatus(text) {
