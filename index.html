@@ -446,7 +446,7 @@ function mapIndsToCat(lclsNm, mclsNm) {
 }
 
 /* 공공데이터포털 상가정보 API에서 반경 내 실제 업체 목록을 가져온다. 실패 시 예외를 던진다. */
-function fetchRealStores(centerPt, radiusKm) { if (SANGGA_CFG.proxy) { return fetch(SANGGA_CFG.proxy + '?lat=' + centerPt.lat.toFixed(5) + '&lon=' + centerPt.lon.toFixed(5) + '&r=' + Math.round(Math.min(Math.max(radiusKm, 0.1) * 1000, 1000))).then(function (res) { if (!res.ok) throw new Error('HTTP ' + res.status); return res.json(); }).then(function (j) { var items = (j && j.items) || []; if (!items.length) throw new Error('결과 없음'); return items.map(function (it, i) { var cat = mapIndsToCat(it.s + ' ' + it.m, it.l === '음식' ? '' : it.l); return { id: it.id || ('real-' + i), name: it.name || '(상호명 미상)', category: cat.key, icon: cat.icon, lat: it.lat, lon: it.lon, phone: '', addr: it.addr || '' }; }); }); }   /* 스마트시 서버 중계(인증키는 서버에만 보관) */
+function fetchRealStores(centerPt, radiusKm) { if (SANGGA_CFG.proxy) { var rM = Math.round(Math.min(Math.max(radiusKm, 0.1) * 1000, 5000)), tries = 0; var get = function () { tries += 1; return fetch(SANGGA_CFG.proxy + '?lat=' + centerPt.lat.toFixed(5) + '&lon=' + centerPt.lon.toFixed(5) + '&r=' + rM + (tries > 1 ? '&t=' + tries : '')).then(function (res) { if (!res.ok) throw new Error('HTTP ' + res.status); return res.json(); }).then(function (j) { if (j && j.partial && tries < 5) { return new Promise(function (ok) { setTimeout(ok, 1200); }).then(get); } return j; }); }; return get().then(function (j) { window.__storesKm = rM / 1000; var items = (j && j.items) || []; if (!items.length) throw new Error('결과 없음'); return items.map(function (it, i) { var cat = mapIndsToCat(it.s + ' ' + it.m, it.l === '음식' ? '' : it.l); return { id: it.id || ('real-' + i), name: it.name || '(상호명 미상)', category: cat.key, icon: cat.icon, lat: it.lat, lon: it.lon, phone: '', addr: it.addr || '' }; }); }); }   /* 스마트시 서버 중계(인증키는 서버에만 보관) */
   var radiusM = Math.min(Math.max(radiusKm, 0.05) * 1000, SANGGA_CFG.maxRadiusM);
   var url = SANGGA_CFG.baseUrl +
     '?serviceKey=' + encodeURIComponent(SANGGA_CFG.serviceKey) +
@@ -636,7 +636,7 @@ function renderRadiusChips() {
     chip.className = 'chip' + (state.radiusKm === o.km ? ' active' : '');
     chip.textContent = o.label;
     chip.addEventListener('click', function (km) {
-      return function () { state.radiusKm = km; renderRadiusChips(); renderResults(); };
+      return function () { state.radiusKm = km; renderRadiusChips(); renderResults(); if (SANGGA_CFG.proxy && km > (window.__storesKm || 1)) { showToast('반경 ' + km + 'km 업체를 불러오는 중…'); refreshStores(CENTER, (currentDistrict && currentDistrict.name) || '', km).then(function () { renderResults(); }); } };   /* 넓은 반경은 눌렀을 때 서버에서 더 불러온다 */
     }(o.km));
     wrap.appendChild(chip);
   }
