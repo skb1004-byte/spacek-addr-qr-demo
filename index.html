@@ -165,6 +165,17 @@ html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
 .img-banner .ib-tag{position:absolute;left:10px;bottom:10px;background:rgba(30,58,138,.88);color:#fff;
   font-size:12.5px;font-weight:700;padding:6px 12px;border-radius:20px}
 .hero-wrap{padding:12px 14px 0}
+/* 배치 최적화: 상단 배너 삭제, 긴급신고 버튼 압축, 업종 카드 축소 */
+.sos-banner{padding:12px 16px 4px;gap:10px}
+.sos-half{aspect-ratio:auto;height:58px;display:flex;align-items:center;justify-content:center;gap:10px;color:#fff;box-shadow:0 2px 8px rgba(0,0,0,.12)}
+.sos-half.sp{background:linear-gradient(135deg,#1e4fb5,#2a6be0)}
+.sos-half.sf{background:linear-gradient(135deg,#d62f2f,#f0543c)}
+.sos-half .sn{font-size:26px;font-weight:900;letter-spacing:-.5px;line-height:1}
+.sos-half .st{font-size:12.5px;font-weight:700;line-height:1.25;text-align:left;opacity:.95}
+.warn{padding:2px 18px 10px;font-size:10px}
+#panel-nearby{border-top:8px solid var(--bg);padding-top:14px}
+.cat-card{width:78px;aspect-ratio:4/5}
+.cats{padding-bottom:10px}
 
 @media (max-width:360px){
   .addr{font-size:17px}
@@ -181,12 +192,6 @@ html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
 </head>
 <body>
 <div class="app">
-  <div class="hero-wrap">
-    <div class="img-banner wide">
-      <img src="images/01-hero-smart-address.webp" alt="주소 QR을 스캔해 위치·안전·생활정보로 연결" loading="lazy">
-      <div class="ib-tag">📍 주소 QR → 위치·안전·생활정보 연결</div>
-    </div>
-  </div>
   <div class="header">
     <div class="top">
       <span>AISUAL</span>
@@ -202,20 +207,16 @@ html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
   </div>
 
   <div class="sos-banner">
-    <a class="sos-half" href="tel:112">
-      <img src="images/sos-112.webp" alt="경찰 112 신고 · 범죄·위급상황·긴급구조" loading="lazy">
+    <a class="sos-half sp" href="tel:112">
+      <span class="sn">🚓 112</span><span class="st">경찰<br>전화 신고</span>
     </a>
-    <a class="sos-half" id="sms119Link" href="sms:119?body=%5B%EA%B8%B4%EA%B8%89%5D%20%EB%B6%80%EC%82%B0%EA%B4%91%EC%97%AD%EC%8B%9C%20%EC%88%98%EC%98%81%EA%B5%AC%20%EB%82%A8%EC%B2%9C%EB%8F%99%EB%A1%9C%20100%20%EC%9C%84%EC%B9%98%EC%97%90%EC%84%9C%20%EA%B8%B4%EA%B8%89%EC%83%81%ED%99%A9%20%EB%B0%9C%EC%83%9D">
-      <img src="images/sos-119.webp" alt="소방 119 신고 · 화재·구조·구급·응급상황" loading="lazy">
+    <a class="sos-half sf" id="sms119Link" href="sms:119?body=%5B%EA%B8%B4%EA%B8%89%5D%20%EB%B6%80%EC%82%B0%EA%B4%91%EC%97%AD%EC%8B%9C%20%EC%88%98%EC%98%81%EA%B5%AC%20%EB%82%A8%EC%B2%9C%EB%8F%99%EB%A1%9C%20100%20%EC%9C%84%EC%B9%98%EC%97%90%EC%84%9C%20%EA%B8%B4%EA%B8%89%EC%83%81%ED%99%A9%20%EB%B0%9C%EC%83%9D">
+      <span class="sn">🚒 119</span><span class="st">소방<br>문자 신고</span>
     </a>
   </div>
   <div class="warn">위급사항을 소방기관 또는 관계 행정기관에 거짓으로 알린 자는 500만원 이하 과태료가 부과됩니다.</div>
 
-  <div class="panel active" id="panel-mine">
-
-  </div>
-
-  <div class="panel active" id="panel-nearby" style="border-top:8px solid var(--bg);padding-top:16px;margin-top:4px">
+  <div class="panel active" id="panel-nearby">
     <div class="gov-title">📍 주변업체</div>
     <div class="chips" id="radiusChips"></div>
     <div class="cats" id="catChips"></div>
