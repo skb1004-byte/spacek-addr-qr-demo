@@ -432,7 +432,7 @@ var SANGGA_CFG = {
   maxRadiusM: 1000, // 반경조회 API 자체 상한(공식 가이드 기준). 이보다 넓은 반경은 다건 조회로 커버 예정.
   numOfRows: 500
 };
-var usingRealSangga = false;
+SANGGA_CFG.proxy = 'https://smartc.co.kr/api/stores';   /* 공공데이터포털 상가정보를 smartc.co.kr 서버가 대신 불러준다 */ var usingRealSangga = false;
 
 function mapIndsToCat(lclsNm, mclsNm) {
   var s = (lclsNm || '') + ' ' + (mclsNm || '');
@@ -446,7 +446,7 @@ function mapIndsToCat(lclsNm, mclsNm) {
 }
 
 /* 공공데이터포털 상가정보 API에서 반경 내 실제 업체 목록을 가져온다. 실패 시 예외를 던진다. */
-function fetchRealStores(centerPt, radiusKm) {
+function fetchRealStores(centerPt, radiusKm) { if (SANGGA_CFG.proxy) { return fetch(SANGGA_CFG.proxy + '?lat=' + centerPt.lat.toFixed(5) + '&lon=' + centerPt.lon.toFixed(5) + '&r=' + Math.round(Math.min(Math.max(radiusKm, 0.1) * 1000, 1000))).then(function (res) { if (!res.ok) throw new Error('HTTP ' + res.status); return res.json(); }).then(function (j) { var items = (j && j.items) || []; if (!items.length) throw new Error('결과 없음'); return items.map(function (it, i) { var cat = mapIndsToCat(it.s + ' ' + it.m, it.l === '음식' ? '' : it.l); return { id: it.id || ('real-' + i), name: it.name || '(상호명 미상)', category: cat.key, icon: cat.icon, lat: it.lat, lon: it.lon, phone: '', addr: it.addr || '' }; }); }); }   /* 스마트시 서버 중계(인증키는 서버에만 보관) */
   var radiusM = Math.min(Math.max(radiusKm, 0.05) * 1000, SANGGA_CFG.maxRadiusM);
   var url = SANGGA_CFG.baseUrl +
     '?serviceKey=' + encodeURIComponent(SANGGA_CFG.serviceKey) +
@@ -481,7 +481,7 @@ function fetchRealStores(centerPt, radiusKm) {
 
 /* 실데이터 연동을 시도하고, 키 미설정/호출 실패/CORS 차단 시 목업으로 자동 대체한다. */
 function refreshStores(centerPt, areaLabel, radiusKmForFetch) {
-  if (!SANGGA_CFG.enabled || SANGGA_CFG.serviceKey === 'YOUR_DATA_GO_KR_DECODING_SERVICE_KEY') {
+  if (!SANGGA_CFG.enabled || (!SANGGA_CFG.proxy && SANGGA_CFG.serviceKey === 'YOUR_DATA_GO_KR_DECODING_SERVICE_KEY')) {
     usingRealSangga = false;
     STORES = buildStores(centerPt, areaLabel);
     updateDataSourceBadge();
