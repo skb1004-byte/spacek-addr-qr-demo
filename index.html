@@ -1122,10 +1122,23 @@ function requestGps(silent) {
 function actAddr() { return String(currentAddrLabel || '').replace(/\s*\(위도[^)]*\)\s*$/, '').trim(); }
 function actRefresh() {
   var a = actAddr(), enc = encodeURIComponent;
-  var sms = document.getElementById('actSms'); if (sms) sms.setAttribute('href', 'sms:?&body=' + enc('[주소 안내] ' + a + ' https://map.naver.com/p/search/' + enc(a.replace(/\s*\([^)]*\)\s*$/, ''))));
+  var sms = document.getElementById('actSms'); if (sms) sms.setAttribute('href', 'sms:?&body=' + enc('[주소 안내] ' + a + '\n주변 3km 업체 보기: ' + actShareUrl(3)));
   var mp = document.getElementById('actMap'); if (mp) mp.setAttribute('href', 'https://map.naver.com/p/search/' + enc(a.replace(/\s*\([^)]*\)\s*$/, '')));
   var rt = document.getElementById('actRoute'); if (rt) rt.setAttribute('href', 'https://map.kakao.com/link/to/' + enc(a.replace(/,/g, ' ')) + ',' + CENTER.lat.toFixed(6) + ',' + CENTER.lon.toFixed(6));
 }
+/* 문자로 받은 사람이 링크를 열면 보낸 위치 기준 반경 3km 업체 목록이 바로 보이게 (?s=1&r=3) */
+function actShareUrl(km) {
+  var base = 'https://smartc.co.kr/addr/', p = new URLSearchParams();
+  var a = (QR.on && QR.a) ? QR.a : actAddr().replace(/\s*\([^)]*\)\s*$/, '');
+  p.set('a', a); if (QR.on && QR.n) p.set('n', QR.n);
+  p.set('lat', CENTER.lat.toFixed(6)); p.set('lon', CENTER.lon.toFixed(6)); p.set('r', String(km)); p.set('s', '1');
+  return base + '?' + p.toString();
+}
+(function () {
+  var SP = new URLSearchParams(location.search), r = parseFloat(SP.get('r'));
+  if ([0.5, 1, 3, 5].indexOf(r) >= 0) { state.radiusKm = r; if (SP.get('s') === '1') state.category = 'all'; }
+  if (SP.get('s') === '1') qrAutoGps = function () { setGpsStatus('📩 문자로 받은 위치 기준 · 내 위치로 바꾸려면 📍 버튼'); };   /* 받은 위치를 내 위치로 덮어쓰지 않음 */
+})();
 (function () {
   var _apply = applyAddrLabel;
   applyAddrLabel = function (label) { _apply(label); try { actRefresh(); } catch (e) { console.error('주소 버튼 갱신 실패', e); } };
