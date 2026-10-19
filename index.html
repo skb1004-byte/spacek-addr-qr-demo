@@ -1122,8 +1122,11 @@ function requestGps(silent) {
 function actAddr() { return String(currentAddrLabel || '').replace(/\s*\(위도[^)]*\)\s*$/, '').trim(); }
 function actRefresh() {
   var a = actAddr(), enc = encodeURIComponent;
-  var sms = document.getElementById('actSms'); if (sms) sms.setAttribute('href', 'sms:?&body=' + enc('[주소 안내] ' + a + '\n주변 3km 업체 보기: ' + actShareUrl(3)));
-  var mp = document.getElementById('actMap'); if (mp) mp.setAttribute('href', 'https://map.naver.com/p/search/' + enc(a.replace(/\s*\([^)]*\)\s*$/, '')));
+  var lat = CENTER.lat.toFixed(6), lon = CENTER.lon.toFixed(6), nm = ((QR.on && QR.n) ? QR.n : '전달받은 위치').replace(/,/g, ' ');   /* 지도 핀 이름은 짧게(문자 길이 절약) */
+  var pin = 'https://map.kakao.com/link/map/' + enc(nm) + ',' + lat + ',' + lon;   /* 좌표로 핀을 꽂아 정확한 지점 표시 */
+  var acc = (gpsActive && gpsBest) ? ' (오차 약 ±' + gpsBest.acc + 'm)' : '';
+  var sms = document.getElementById('actSms'); if (sms) sms.setAttribute('href', 'sms:?&body=' + enc('[위치 안내] ' + a + '\n좌표 ' + lat + ', ' + lon + acc + '\n정확한 위치(지도): ' + pin + '\n주변 3km 업체: ' + actShareUrl(3)));
+  var mp = document.getElementById('actMap'); if (mp) mp.setAttribute('href', pin);
   var rt = document.getElementById('actRoute'); if (rt) rt.setAttribute('href', 'https://map.kakao.com/link/to/' + enc(a.replace(/,/g, ' ')) + ',' + CENTER.lat.toFixed(6) + ',' + CENTER.lon.toFixed(6));
 }
 /* 문자로 받은 사람이 링크를 열면 보낸 위치 기준 반경 3km 업체 목록이 바로 보이게 (?s=1&r=3) */
@@ -1142,6 +1145,11 @@ function actShareUrl(km) {
 (function () {
   var _apply = applyAddrLabel;
   applyAddrLabel = function (label) { _apply(label); try { actRefresh(); } catch (e) { console.error('주소 버튼 갱신 실패', e); } };
+  var sm = document.getElementById('actSms'); if (sm) sm.addEventListener('click', function () {   /* 누르는 순간의 최신 위치로 다시 만듦 */
+    actRefresh();
+    if (gpsActive && gpsBest && gpsBest.acc > 100) showToast('위치 오차가 ±' + gpsBest.acc + 'm입니다. 실외에서 📍 내 위치를 다시 누르면 더 정확해집니다');
+  });
+  var mpb = document.getElementById('actMap'); if (mpb) mpb.addEventListener('click', function () { actRefresh(); });
   var v = document.getElementById('actVoice'); if (v) v.addEventListener('click', function () { document.getElementById('ttsBtn').click(); });
   var c = document.getElementById('actCopy'); if (c) c.addEventListener('click', function () {
     var a = actAddr(), done = function () { showToast('주소를 복사했습니다'); };
