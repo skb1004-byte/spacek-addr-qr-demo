@@ -184,6 +184,28 @@ html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
 .act-btn:active{background:var(--bg)}
 .act-route{grid-column:1/-1;background:var(--navy);border-color:var(--navy);color:#fff;min-height:52px;font-size:16px}
 .act-route:active{background:var(--navy-d)}
+/* ───── 디자인 통일: 모서리 12px · 버튼/입력 높이 48px · 글씨 15px/800 · 구역 = 8px 회색 띠 + 제목 ───── */
+:root{--r:12px;--h:48px}
+.sos-banner{padding:14px 16px 6px}
+.sos-half{border-radius:var(--r);height:60px}
+.warn{padding:4px 16px 14px}
+.act-wrap{border-top:8px solid var(--bg);padding:14px 16px 16px}
+.sec-title{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:800;color:var(--navy);margin:0 0 4px}
+.act-note{font-size:12.5px;color:var(--sub);margin:0 0 10px}
+.act-btn{border-radius:var(--r);min-height:var(--h);font-size:15px}
+.act-route{min-height:52px}
+#panel-nearby{padding:14px 16px 16px}
+#panel-nearby>.gov-title{font-size:15px;font-weight:800;margin-bottom:10px}
+.chips{gap:8px;padding:0 0 10px;margin:0}
+.chip{flex:1;height:40px;padding:0 12px;border-radius:var(--r);font-size:14px;font-weight:800;color:var(--ink);display:flex;align-items:center;justify-content:center}
+.chip.active{color:#fff}
+.cat-card{border-radius:var(--r)}
+.cat-card.active{outline-offset:-3px}
+.search input{height:var(--h);padding:0 14px;border-radius:var(--r);font-size:15px}
+.search button{height:var(--h);padding:0 18px;border-radius:var(--r);font-size:15px;font-weight:800}
+.store .ic{border-radius:10px}
+.modal .actions a,.modal .actions button{border-radius:var(--r);min-height:var(--h);font-weight:800}
+.toast{border-radius:var(--r)}
 
 @media (max-width:360px){
   .addr{font-size:17px}
@@ -224,6 +246,7 @@ html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
   </div>
   <div class="warn">위급사항을 소방기관 또는 관계 행정기관에 거짓으로 알린 자는 500만원 이하 과태료가 부과됩니다.</div>
   <div class="act-wrap">
+    <div class="sec-title">🏠 이 주소 바로 쓰기</div>
     <div class="act-note">신고할 때 위에 보이는 주소를 그대로 말하세요.</div>
     <div class="act-grid">
       <button type="button" class="act-btn" id="actVoice">🔊 음성으로 듣기</button>
