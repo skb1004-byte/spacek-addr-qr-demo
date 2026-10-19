@@ -1230,6 +1230,46 @@ function actShareUrl(km) {
   });
   actRefresh();
 })();
+/* ───────── 주차장: 상가정보에는 주차장이 없어 공공 주차장 표준데이터(/api/parking)를 같은 반경으로 덧붙인다 ───────── */
+var PARK = { state: 'idle', msg: '' };
+(function () {
+  var _rs = refreshStores;
+  refreshStores = function (centerPt, areaLabel, km) {
+    return _rs(centerPt, areaLabel, km).then(function () {
+      if (!usingRealSangga) return;
+      var seq = window.__storesSeq, rM = Math.round(Math.min(Math.max(km || 1, 0.5), 5) * 1000), tries = 0;
+      PARK.state = 'loading';
+      var get = function () {
+        tries += 1;
+        return fetch('https://smartc.co.kr/api/parking?lat=' + centerPt.lat.toFixed(5) + '&lon=' + centerPt.lon.toFixed(5) + '&r=' + rM + (tries > 1 ? '&t=' + tries : ''))
+          .then(function (r) { return r.json().then(function (j) { if (!r.ok) { var e = new Error(j.error || ('HTTP ' + r.status)); e.code = j.code; throw e; } return j; }); })
+          .then(function (j) { if (j.partial && tries < 6) return new Promise(function (ok) { setTimeout(ok, 1500); }).then(get); return j; });
+      };
+      return get().then(function (j) {
+        if (seq !== window.__storesSeq) return;
+        STORES = STORES.filter(function (s) { return s.category !== 'park'; });
+        (j.items || []).forEach(function (p, i) {
+          var meta = [p.t, p.k, p.c ? p.c + '면' : '', p.f, p.h ? '평일 ' + p.h.replace(/(\d\d)(\d\d)/g, '$1:$2') : ''].filter(Boolean).join(' · ');
+          STORES.push({ id: 'pk-' + i, name: p.n || '주차장', category: 'park', icon: '🅿️', lat: p.lat, lon: p.lon, phone: p.p || '', addr: (p.a || '') + (meta ? ' · ' + meta : '') });
+        });
+        PARK.state = 'ok'; PARK.msg = '';
+        if (state.category === 'park' || state.category === 'all') renderResults();
+      }).catch(function (e) {
+        console.error('주차장 정보 불러오기 실패', e);
+        PARK.state = 'err'; PARK.msg = e.code === 'NOKEY' ? '주차장 공공데이터 사용 승인을 기다리는 중입니다' : '주차장 정보를 불러오지 못했습니다';
+        if (state.category === 'park') renderResults();
+      });
+    });
+  };
+  var _rr2 = renderResults;
+  renderResults = function () {
+    _rr2();
+    if (state.category === 'park' && !STORES.some(function (s) { return s.category === 'park'; })) {
+      var box = document.getElementById('storeList');
+      if (box) box.innerHTML = '<div class="empty">' + (PARK.state === 'loading' ? '주변 주차장을 찾는 중입니다…' : (PARK.msg || '반경 안에 등록된 주차장이 없습니다. 반경을 넓혀 보세요.')) + '</div>';
+    }
+  };
+})();
 /* ───────── 초기 렌더 ───────── */
 drawMap('mapCanvas', 1, null);
 renderRadiusChips();
