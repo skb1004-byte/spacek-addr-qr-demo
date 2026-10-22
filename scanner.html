@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1D3A8A">
+<title>주소 QR 스캔</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<style>
+:root{
+  --navy:#1D3A8A; --navy-d:#142A66; --red:#D62828; --blue:#1F6FEB;
+  --bg:#E9EDF3; --card:#FFFFFF; --ink:#16203A; --sub:#5B6478; --line:#E2E6EE;
+  --chip:#F1F4F9;
+}
+@media (prefers-color-scheme: dark){
+  :root{ --bg:#0E1424; --card:#18213A; --ink:#E8ECF6; --sub:#9AA4BC; --line:#28324E; --chip:#222C48; }
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:"Pretendard",-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;
+  padding-bottom:env(safe-area-inset-bottom,0px)}
+.app{max-width:480px;margin:0 auto;background:var(--card);min-height:100%;box-shadow:0 0 0 1px var(--line)}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
+button:focus-visible,a:focus-visible,input:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+
+/* 히어로: 탭하면 스캐너 */
+.hero{position:relative;display:block;width:100%;aspect-ratio:16/9;overflow:hidden;
+  background:linear-gradient(160deg,#BFE0F7 0%,#7DB7E8 45%,#2C6FB8 100%);
+  padding-top:env(safe-area-inset-top,0px);text-align:left}
+.hero svg.city{position:absolute;left:0;right:0;bottom:0;width:100%;height:55%}
+.plate{position:absolute;left:7%;top:16%;width:30%;aspect-ratio:3/3.6;background:var(--navy);
+  clip-path:polygon(50% 0,100% 22%,100% 100%,0 100%,0 22%);display:grid;place-items:center;
+  box-shadow:0 10px 24px rgba(10,20,60,.35)}
+.plate .qrbox{width:62%;aspect-ratio:1;background:#fff;border-radius:6px;margin-top:22%;position:relative;overflow:hidden;
+  display:grid;place-items:center}
+.plate .qrbox svg{width:84%;height:84%}
+.scanline{position:absolute;left:0;right:0;height:3px;background:var(--red);box-shadow:0 0 10px var(--red);
+  top:10%;animation:scan 2.2s ease-in-out infinite}
+@keyframes scan{0%,100%{top:8%}50%{top:88%}}
+@media (prefers-reduced-motion: reduce){.scanline{animation:none;top:50%}}
+.hero-text{position:absolute;right:6%;top:20%;width:52%;color:#fff;text-shadow:0 1px 6px rgba(0,30,80,.45)}
+.hero-text h1{font-size:clamp(20px,5.6vw,26px);font-weight:800;line-height:1.25;letter-spacing:-.02em}
+.hero-text p{font-size:13px;margin-top:6px;opacity:.95}
+.cta{position:absolute;left:50%;transform:translateX(-50%);bottom:7%;display:inline-flex;align-items:center;gap:8px;
+  background:var(--red);color:#fff;font-weight:700;font-size:15px;padding:10px 18px;border-radius:999px;
+  box-shadow:0 6px 18px rgba(214,40,40,.45);white-space:nowrap}
+
+/* 주소 헤더 */
+.addr{background:var(--navy);color:#fff;padding:16px 18px 18px}
+.addr .brand{font-size:12px;opacity:.8;display:flex;justify-content:space-between;align-items:center}
+.addr .src{font-size:12px;opacity:.85;margin-top:10px;word-break:break-all}
+.addr h2{font-size:21px;font-weight:800;line-height:1.35;margin-top:4px;letter-spacing:-.01em}
+.addr .meta{font-size:12.5px;opacity:.85;margin-top:6px}
+.addr .row{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.pill{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);
+  color:#fff;font-size:13px;font-weight:600;padding:7px 12px;border-radius:999px;text-decoration:none}
+.empty{padding:18px;color:var(--sub);font-size:14px;line-height:1.6}
+
+section{padding:16px}
+.sec-title{font-size:16px;font-weight:800;display:flex;align-items:center;gap:6px;margin-bottom:10px}
+
+/* 긴급 */
+.sos{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sos a{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border-radius:14px;color:#fff;
+  text-decoration:none;padding:14px 8px;font-weight:800}
+.sos a b{font-size:30px;line-height:1;letter-spacing:-.02em}
+.sos a span{font-size:12px;font-weight:600;opacity:.92}
+.sos .p{background:linear-gradient(160deg,#2F63D6,#173E9E)}
+.sos .f{background:linear-gradient(160deg,#E2453B,#A8161B)}
+.note{font-size:11.5px;color:var(--sub);margin-top:8px;line-height:1.5}
+
+/* 지도 */
+#map{height:280px;border-radius:14px;overflow:hidden;border:1px solid var(--line);background:var(--chip)}
+.maplinks{display:flex;gap:8px;margin-top:10px}
+.maplinks a{flex:1;text-align:center;font-size:13px;font-weight:700;padding:10px;border-radius:10px;
+  background:var(--chip);color:var(--ink);text-decoration:none}
+
+/* 구청 카드 */
+.office{display:flex;align-items:center;gap:12px;padding:14px;border:1px solid var(--line);border-radius:14px}
+.office .ic{width:44px;height:44px;border-radius:12px;background:var(--navy);display:grid;place-items:center;flex:none}
+.office .t{flex:1;min-width:0}
+.office .t b{display:block;font-size:15px}
+.office .t small{color:var(--sub);font-size:12.5px;display:block;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.office .acts{display:flex;gap:6px}
+.office .acts a,.office .acts button{width:38px;height:38px;border-radius:50%;background:var(--chip);display:grid;place-items:center;text-decoration:none;color:var(--navy)}
+
+/* 주변업체 */
+.radius{display:flex;gap:6px;margin-bottom:10px}
+.radius button{padding:7px 14px;border-radius:999px;border:1px solid var(--line);font-size:13px;font-weight:700}
+.radius button[aria-pressed=true]{background:var(--navy);color:#fff;border-color:var(--navy)}
+.cats{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.cats::-webkit-scrollbar{display:none}
+.cats button{flex:none;display:flex;flex-direction:column;align-items:center;gap:4px;width:66px;padding:9px 0;border-radius:12px;
+  background:var(--chip);font-size:12px;font-weight:700}
+.cats button .e{font-size:22px;line-height:1}
+.cats button[aria-pressed=true]{background:var(--navy);color:#fff}
+.search{display:flex;gap:8px;margin-top:10px}
+.search input{flex:1;min-width:0;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;padding:11px 12px;font:inherit;font-size:14px}
+.search button{background:var(--navy);color:#fff;font-weight:700;padding:0 16px;border-radius:10px}
+.count{display:flex;justify-content:space-between;align-items:center;font-size:12.5px;color:var(--sub);margin:12px 0 4px}
+.list{list-style:none}
+.list li{border-bottom:1px solid var(--line)}
+.list button{width:100%;display:flex;align-items:center;gap:12px;padding:12px 2px;text-align:left}
+.list .e{width:38px;height:38px;border-radius:10px;background:var(--chip);display:grid;place-items:center;font-size:19px;flex:none}
+.list .n{flex:1;min-width:0}
+.list .n b{display:block;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.list .n small{display:block;color:var(--sub);font-size:12px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.list .d{color:var(--navy);font-weight:800;font-size:13px;flex:none}
+@media (prefers-color-scheme: dark){.list .d{color:#8FB0FF}.office .acts a,.office .acts button{color:#8FB0FF}}
+.status{padding:18px 4px;color:var(--sub);font-size:14px;text-align:center}
+.more{width:100%;margin-top:10px;padding:11px;border-radius:10px;background:var(--chip);font-weight:700;font-size:14px}
+footer{padding:18px 16px 28px;color:var(--sub);font-size:11.5px;line-height:1.6}
+
+/* 스캐너 오버레이 */
+.scanner{position:fixed;inset:0;z-index:2000;background:#000;display:none;flex-direction:column}
+.scanner.on{display:flex}
+.scanner video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.scanner .frame{position:absolute;left:50%;top:45%;width:min(68vw,300px);aspect-ratio:1;transform:translate(-50%,-50%);
+  border-radius:22px;box-shadow:0 0 0 9999px rgba(0,0,0,.55)}
+.scanner .frame::before{content:"";position:absolute;inset:0;border-radius:22px;border:3px solid #fff}
+.scanner .frame .scanline{left:6%;right:6%}
+.scanner .top{position:relative;display:flex;justify-content:space-between;align-items:center;
+  padding:calc(env(safe-area-inset-top,0px) + 12px) 16px 12px;color:#fff;z-index:2}
+.scanner .top b{font-size:16px}
+.scanner .top button{width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,.18);color:#fff;font-size:22px}
+.scanner .bottom{position:absolute;left:0;right:0;bottom:0;padding:16px 16px calc(env(safe-area-inset-bottom,0px) + 22px);
+  display:flex;flex-direction:column;gap:10px;align-items:center;z-index:2}
+.scanner .hint{color:#fff;font-size:14px;text-align:center;text-shadow:0 1px 4px #000}
+.scanner .btns{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.scanner .btns button,.scanner .btns label{background:rgba(255,255,255,.18);color:#fff;font-weight:700;font-size:14px;
+  padding:11px 16px;border-radius:999px;cursor:pointer}
+.scanner .err{background:rgba(214,40,40,.9);color:#fff;font-size:13px;padding:10px 14px;border-radius:10px;max-width:92%;text-align:center;display:none}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:2100;background:var(--card);border-radius:18px 18px 0 0;
+  padding:18px 16px calc(env(safe-area-inset-bottom,0px) + 18px);box-shadow:0 -8px 30px rgba(0,0,0,.25);
+  transform:translateY(110%);transition:transform .25s ease,visibility 0s .25s;visibility:hidden}
+.sheet.on{transform:none;visibility:visible;transition:transform .25s ease}
+.sheet h3{font-size:16px;margin-bottom:10px}
+.sheet input{width:100%;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;padding:12px;font:inherit;font-size:15px}
+.sheet .r{display:flex;gap:8px;margin-top:10px}
+.sheet .r button{flex:1;padding:12px;border-radius:10px;font-weight:700}
+.sheet .r .go{background:var(--navy);color:#fff}
+.sheet .r .no{background:var(--chip)}
+.toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 24px);transform:translateX(-50%);
+  background:#16203A;color:#fff;font-size:13.5px;padding:10px 16px;border-radius:999px;z-index:3000;opacity:0;transition:opacity .2s;pointer-events:none;max-width:90%}
+.toast.on{opacity:1}
+.leaflet-container{font-family:inherit}
+.pin{width:18px;height:18px;border-radius:50%;background:var(--blue);border:3px solid #fff;box-shadow:0 0 0 2px var(--blue)}
+.dot{width:12px;height:12px;border-radius:50%;background:var(--red);border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.4)}
+.gov{width:26px;height:26px;border-radius:8px;background:var(--navy);border:2px solid #fff;color:#fff;display:grid;place-items:center;font-size:14px;box-shadow:0 1px 4px rgba(0,0,0,.4)}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <button class="hero" id="heroBtn" aria-label="QR 코드 스캔하기">
+    <div class="plate" aria-hidden="true">
+      <div class="qrbox">
+        <svg viewBox="0 0 21 21" shape-rendering="crispEdges"><path fill="#16203A" d="M0 0h7v7H0zM1 1v5h5V1zM2 2h3v3H2zM14 0h7v7h-7zm1 1v5h5V1zm1 1h3v3h-3zM0 14h7v7H0zm1 1v5h5v-5zm1 1h3v3H2zM8 0h1v2H8zm2 1h2v1h-2zm-2 3h3v1H8zm4 1h1v3h-1zM8 7h2v2H8zm3 2h3v1h-3zM0 8h2v1H0zm3 0h3v2H3zm11 0h2v1h-2zm3 0h4v1h-4zM8 11h1v3H8zm2 0h4v2h-4zm6 0h2v2h-2zm3 1h2v1h-2zM10 14h1v3h-1zm2 1h3v1h-3zm4 0h1v4h-1zm2 1h3v2h-3zM9 18h3v1H9zm4 1h2v2h-2zm6 0h2v2h-2z"/></svg>
+        <div class="scanline"></div>
+      </div>
+    </div>
+    <div class="hero-text">
+      <h1>건물번호판 QR을<br>비춰 보세요</h1>
+      <p>주소, 지도, 구청, 주변 가게를 한 번에 보여드립니다</p>
+    </div>
+    <svg class="city" viewBox="0 0 400 120" preserveAspectRatio="none" aria-hidden="true">
+      <path fill="#E8F2FB" opacity=".55" d="M0 70h20V50h14v20h10V38h18v32h8V58h16v12h12V30h12v40h10V46h20v24h8V54h14v16h10V26h16v44h12V48h18v22h10V40h14v30h12V56h16v14h10V34h14v36h12V50h18v20h10V60h16v60H0z"/>
+      <path fill="#1E4F8F" d="M0 92c60-10 120-8 200-2s140 6 200-4v34H0z" opacity=".9"/>
+      <path fill="#163E73" d="M0 104c80-6 150-4 220 0s120 2 180-4v24H0z"/>
+    </svg>
+    <span class="cta">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"><path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3M4 12h16"/></svg>
+      탭해서 QR 스캔
+    </span>
+  </button>
+
+  <div class="addr" id="addrBox" aria-live="polite">
+    <div class="brand"><span>AISUAL 주소 QR</span><button class="pill" id="manualBtn" style="padding:5px 10px;font-size:12px">주소 직접 입력</button></div>
+    <div id="addrBody">
+      <h2 style="margin-top:10px">QR을 스캔하면 이 자리에 주소가 나옵니다</h2>
+      <p class="meta">건물번호판의 QR 코드를 위 화면을 눌러 카메라로 비춰 주세요.</p>
+      <div class="row"><button class="pill" id="demoBtn">예시 주소로 보기</button></div>
+    </div>
+  </div>
+
+  <section aria-label="긴급신고">
+    <div class="sos">
+      <a class="p" id="call112" href="tel:112"><span>경찰 긴급신고</span><b>112</b><span>범죄·위급상황</span></a>
+      <a class="f" id="call119" href="tel:119"><span>소방 긴급신고</span><b>119</b><span>화재·구조·구급</span></a>
+    </div>
+    <p class="note" id="smsNote">주소를 스캔한 뒤에는 현재 주소가 담긴 문자 신고도 할 수 있습니다. 위급상황을 거짓으로 알리면 과태료가 부과됩니다.</p>
+  </section>
+
+  <section id="mapSec" hidden>
+    <h3 class="sec-title">📍 지도</h3>
+    <div id="map" role="region" aria-label="지도"></div>
+    <div class="maplinks">
+      <a id="kakaoLink" target="_blank" rel="noopener">카카오맵</a>
+      <a id="naverLink" target="_blank" rel="noopener">네이버지도</a>
+      <a id="rawLink" target="_blank" rel="noopener">QR 링크 열기</a>
+    </div>
+  </section>
+
+  <section id="officeSec" hidden>
+    <h3 class="sec-title">🏛️ 관할 구청</h3>
+    <div class="office" id="officeCard">
+      <div class="ic"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M3 21h18M5 21V10M19 21V10M9 21v-6h6v6M2 10l10-6 10 6"/></svg></div>
+      <div class="t"><b id="officeName">찾는 중…</b><small id="officeSub"></small></div>
+      <div class="acts" id="officeActs"></div>
+    </div>
+  </section>
+
+  <section id="poiSec" hidden>
+    <h3 class="sec-title">🏪 주변업체</h3>
+    <div class="radius" role="group" aria-label="반경">
+      <button data-r="500" aria-pressed="false">500m</button>
+      <button data-r="1000" aria-pressed="true">1km</button>
+      <button data-r="3000" aria-pressed="false">3km</button>
+    </div>
+    <div class="cats" id="cats" role="group" aria-label="업종"></div>
+    <form class="search" id="searchForm">
+      <input id="q" type="search" placeholder="반경 안에서 이름 검색 (예: 국밥)" aria-label="업체 이름 검색">
+      <button type="submit">검색</button>
+    </form>
+    <div class="count"><span id="cnt"></span><span id="srcTag"></span></div>
+    <ul class="list" id="list"></ul>
+    <button class="more" id="moreBtn" hidden>더 보기</button>
+  </section>
+
+  <footer>지도·업체 정보: © OpenStreetMap 기여자. 위치는 도로명 기준이라 실제 건물과 수십 m 차이가 날 수 있습니다.</footer>
+</div>
+
+<!-- 스캐너 -->
+<div class="scanner" id="scanner" role="dialog" aria-modal="true" aria-label="QR 스캔">
+  <video id="video" playsinline muted autoplay></video>
+  <div class="top"><b>QR 스캔</b><button id="closeScan" aria-label="닫기">✕</button></div>
+  <div class="frame"><div class="scanline"></div></div>
+  <div class="bottom">
+    <div class="err" id="scanErr"></div>
+    <p class="hint">네모 칸 안에 QR 코드를 맞춰 주세요</p>
+    <div class="btns">
+      <button id="torchBtn" hidden>🔦 손전등</button>
+      <label>🖼️ 사진에서 찾기<input type="file" accept="image/*" id="fileIn" hidden></label>
+    </div>
+  </div>
+  <canvas id="cv" hidden></canvas>
+</div>
+
+<div class="sheet" id="sheet" role="dialog" aria-label="주소 직접 입력">
+  <h3>주소를 입력하세요</h3>
+  <input id="manualIn" placeholder="예: 부산 영도구 와치로 19" enterkeyhint="go">
+  <div class="r"><button class="no" id="sheetNo">취소</button><button class="go" id="sheetGo">찾기</button></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+<script>
+(function(){
+const $=s=>document.querySelector(s);
+const toastEl=$('#toast');let tt;
+function toast(m){toastEl.textContent=m;toastEl.classList.add('on');clearTimeout(tt);tt=setTimeout(()=>toastEl.classList.remove('on'),2600)}
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+/* ---------- QR 내용 → 주소 ---------- */
+function parseQR(text){
+  text=(text||'').trim();
+  let url=null,addr=null;
+  try{
+    const u=new URL(text);url=u.href;
+    const p=u.searchParams;
+    addr=p.get('q')||p.get('query')||p.get('addr')||p.get('address')||p.get('keyword')||p.get('search');
+    if(!addr){ // 경로에 주소가 들어간 경우 (/search/주소)
+      const m=decodeURIComponent(u.pathname).match(/search\/([^/]+)/);
+      if(m)addr=m[1];
+    }
+  }catch(e){ addr=text; }
+  if(addr)addr=addr.replace(/\+/g,' ').replace(/\s+/g,' ').trim();
+  return {raw:text,url,addr};
+}
+
+/* ---------- 지도 ---------- */
+let map,meLayer,poiLayer,govLayer,circle;
+function ensureMap(){
+  if(map)return;
+  map=L.map('map',{zoomControl:true,attributionControl:true});
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(map);
+  meLayer=L.layerGroup().addTo(map);poiLayer=L.layerGroup().addTo(map);govLayer=L.layerGroup().addTo(map);
+}
+const icon=(cls,html='')=>L.divIcon({className:'',html:`<div class="${cls}">${html}</div>`,iconSize:cls==='gov'?[26,26]:cls==='pin'?[18,18]:[12,12]});
+
+/* ---------- 거리 ---------- */
+function dist(a,b,c,d){const R=6371000,r=x=>x*Math.PI/180;const dl=r(c-a),dn=r(d-b);
+  const h=Math.sin(dl/2)**2+Math.cos(r(a))*Math.cos(r(c))*Math.sin(dn/2)**2;return 2*R*Math.asin(Math.sqrt(h))}
+const fmt=m=>m<1000?Math.round(m)+'m':(m%1000===0?m/1000:(m/1000).toFixed(1))+'km';
+
+/* ---------- 지오코딩 ---------- */
+async function nomi(q,extra=''){
+  const r=await fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&accept-language=ko&countrycodes=kr&limit=1&q='+encodeURIComponent(q)+extra);
+  if(!r.ok)throw new Error('geo');return (await r.json())[0];
+}
+async function geocode(addr){
+  const tries=[addr];
+  const noNum=addr.replace(/\s*\d+(-\d+)?\s*$/,'');if(noNum!==addr)tries.push(noNum);
+  for(const t of tries){
+    try{const g=await nomi(t);if(g)return {lat:+g.lat,lon:+g.lon,exact:t===addr&&g.addresstype!=='road',road:t!==addr||g.addresstype==='road',info:g};}catch(e){}
+  }
+  try{ // 보조: Photon
+    const r=await fetch('https://photon.komoot.io/api/?limit=1&q='+encodeURIComponent(addr));
+    const f=(await r.json()).features?.[0];
+    if(f)return {lat:f.geometry.coordinates[1],lon:f.geometry.coordinates[0],road:true,info:{address:f.properties}};
+  }catch(e){}
+  return null;
+}
+function districtOf(addr,info){
+  const a=info?.address||{};
+  let d=a.borough||a.city_district||a.county||a.district||'';
+  if(!d){const m=addr.match(/(\S+?[구군])(\s|$)/);if(m)d=m[1];}
+  if(!d){const m=addr.match(/(\S+?시)(\s|$)/);if(m)d=m[1];}
+  return d;
+}
+
+/* ---------- Overpass ---------- */
+const OVP=['https://overpass-api.de/api/interpreter','https://overpass.kumi.systems/api/interpreter','https://maps.mail.ru/osm/tools/overpass/api/interpreter'];
+async function overpass(q){ // 여러 서버에 동시에 요청해 가장 빠른 응답 사용
+  const ctls=OVP.map(()=>new AbortController());
+  const to=setTimeout(()=>ctls.forEach(c=>c.abort()),12000);
+  try{
+    const res=await Promise.any(OVP.map(async(u,i)=>{
+      const r=await fetch(u,{method:'POST',body:'data='+encodeURIComponent(q),headers:{'Content-Type':'application/x-www-form-urlencoded'},signal:ctls[i].signal});
+      if(!r.ok)throw new Error(r.status);const j=await r.json();
+      ctls.forEach((c,k)=>k!==i&&c.abort());return j.elements||[];
+    }));
+    return res;
+  }catch(e){throw new Error('overpass')}finally{clearTimeout(to)}
+}
+
+/* ---------- 업종 ---------- */
+const CATS=[
+  {k:'all',n:'전체',e:'📍'},
+  {k:'food',n:'음식점',e:'🍽️',t:[['amenity','restaurant'],['amenity','fast_food']]},
+  {k:'cafe',n:'카페',e:'☕',t:[['amenity','cafe']]},
+  {k:'conv',n:'편의점',e:'🏪',t:[['shop','convenience'],['shop','supermarket']]},
+  {k:'pharm',n:'약국',e:'💊',t:[['amenity','pharmacy']]},
+  {k:'hosp',n:'병원',e:'🏥',t:[['amenity','hospital'],['amenity','clinic'],['amenity','doctors'],['amenity','dentist']]},
+  {k:'bank',n:'은행',e:'🏦',t:[['amenity','bank'],['amenity','atm']]},
+  {k:'park',n:'주차장',e:'🅿️',t:[['amenity','parking']]},
+  {k:'pub',n:'공공',e:'🏛️',t:[['amenity','police'],['amenity','fire_station'],['amenity','post_office'],['amenity','townhall'],['amenity','toilets']]},
+];
+function catOf(tags){for(const c of CATS.slice(1))for(const [k,v] of c.t)if(tags[k]===v)return c;return null}
+
+/* ---------- 상태 ---------- */
+const S={lat:null,lon:null,addr:'',r:1000,cat:'all',q:'',items:[],cache:{},shown:20,src:''};
+
+/* ---------- 결과 표시 ---------- */
+async function showResult(parsed){
+  const {addr,url,raw}=parsed;
+  if(!addr){toast('QR에서 주소를 찾지 못했습니다');renderAddr(parsed,null);return}
+  S.addr=addr;
+  renderAddr(parsed,'loading');
+  const g=await geocode(addr);
+  if(!g){renderAddr(parsed,'fail');return}
+  S.lat=g.lat;S.lon=g.lon;S.cache={};S.shown=20;
+  renderAddr(parsed,g);
+  ['#mapSec','#officeSec','#poiSec'].forEach(s=>$(s).hidden=false);
+  ensureMap();
+  setTimeout(()=>map.invalidateSize(),50);
+  map.setView([g.lat,g.lon],15);
+  meLayer.clearLayers();
+  L.marker([g.lat,g.lon],{icon:icon('pin'),zIndexOffset:1000}).addTo(meLayer).bindPopup(esc(addr));
+  drawCircle();
+  $('#kakaoLink').href='https://map.kakao.com/?q='+encodeURIComponent(addr);
+  $('#naverLink').href='https://map.naver.com/p/search/'+encodeURIComponent(addr);
+  const rl=$('#rawLink');if(url){rl.href=url;rl.style.display=''}else rl.style.display='none';
+  const body=encodeURIComponent('[긴급신고] 위치: '+addr);
+  $('#call112').href='tel:112';$('#call119').href='tel:119';
+  $('#smsNote').innerHTML=`문자 신고: <a href="sms:112?body=${body}">112 문자</a> · <a href="sms:119?body=${body}">119 문자</a> (현재 주소가 자동으로 들어갑니다). 위급상황을 거짓으로 알리면 과태료가 부과됩니다.`;
+  findOffice(addr,g);
+  loadPOI();
+  $('#addrBox').scrollIntoView({behavior:'smooth',block:'start'});
+}
+function renderAddr(p,g){
+  const src=p.url?`QR 링크: ${esc((()=>{try{return decodeURI(p.url)}catch(e){return p.url}})())}`:`QR 내용: ${esc(p.raw)}`;
+  let h=`<p class="src">${src}</p>`;
+  if(!p.addr){h+=`<h2>이 QR에는 주소가 없습니다</h2><p class="meta">건물번호판 주소 QR인지 확인하거나, 주소를 직접 입력해 주세요.</p>`;
+    if(p.url)h+=`<div class="row"><a class="pill" href="${esc(p.url)}" target="_blank" rel="noopener">링크 열기</a></div>`;}
+  else if(g==='loading')h+=`<h2>${esc(p.addr)}</h2><p class="meta">위치를 찾는 중입니다…</p>`;
+  else if(g==='fail')h+=`<h2>${esc(p.addr)}</h2><p class="meta">이 주소의 위치를 지도에서 찾지 못했습니다. 카카오맵으로 확인해 보세요.</p><div class="row"><a class="pill" target="_blank" rel="noopener" href="https://map.kakao.com/?q=${encodeURIComponent(p.addr)}">카카오맵에서 보기</a></div>`;
+  else{
+    const area=[g.info?.address?.city,g.info?.address?.borough||g.info?.address?.county,g.info?.address?.quarter||g.info?.address?.suburb].filter(Boolean).join(' ');
+    h+=`<h2>📍 ${esc(p.addr)}</h2><p class="meta">${esc(area)}${g.road?' · 도로 기준 위치':''}</p>
+    <div class="row"><button class="pill" id="copyBtn">주소 복사</button><button class="pill" id="rescan">다시 스캔</button></div>`;
+  }
+  $('#addrBody').innerHTML=h;
+  $('#copyBtn')?.addEventListener('click',()=>{navigator.clipboard?.writeText(p.addr).then(()=>toast('주소를 복사했습니다'),()=>toast('복사하지 못했습니다'))});
+  $('#rescan')?.addEventListener('click',openScanner);
+}
+function drawCircle(){
+  if(circle)circle.remove();
+  circle=L.circle([S.lat,S.lon],{radius:S.r,color:'#1D3A8A',weight:2,dashArray:'6 6',fillOpacity:.05}).addTo(meLayer);
+  map.fitBounds(circle.getBounds(),{padding:[10,10]});
+}
+
+/* ---------- 구청 ---------- */
+async function findOffice(addr,g){
+  const d=districtOf(addr,g.info);
+  $('#officeName').textContent=d?d+'청 찾는 중…':'관할 구청 찾는 중…';$('#officeSub').textContent='';$('#officeActs').innerHTML='';
+  govLayer.clearLayers();
+  let o=null;
+  try{
+    const els=await overpass(`[out:json][timeout:20];nwr(around:12000,${S.lat},${S.lon})["amenity"="townhall"];out center tags 40;`);
+    const c=els.map(e=>({name:e.tags.name||'',phone:e.tags.phone||e.tags['contact:phone']||'',lat:e.lat??e.center?.lat,lon:e.lon??e.center?.lon}))
+      .filter(e=>e.lat&&/(구청|군청|시청)$/.test(e.name));
+    const pref=d?c.filter(e=>e.name.startsWith(d)):[];
+    const pool=pref.length?pref:c;
+    pool.forEach(e=>e.d=dist(S.lat,S.lon,e.lat,e.lon));pool.sort((a,b)=>a.d-b.d);o=pool[0]||null;
+  }catch(e){}
+  if(!o&&d){try{const n=await nomi(d+'청');if(n)o={name:n.name||d+'청',lat:+n.lat,lon:+n.lon,phone:''};}catch(e){}}
+  if(!o){$('#officeName').textContent='관할 구청을 찾지 못했습니다';$('#officeSub').textContent=d?`${d}청을 지도 앱에서 검색해 보세요`:'';return}
+  o.d=dist(S.lat,S.lon,o.lat,o.lon);
+  $('#officeName').textContent=o.name;
+  $('#officeSub').textContent=`여기서 ${fmt(o.d)}${o.phone?' · '+o.phone:''}`;
+  const q=encodeURIComponent(o.name);
+  $('#officeActs').innerHTML=
+    (o.phone?`<a href="tel:${esc(o.phone.replace(/[^\d+]/g,''))}" aria-label="전화">📞</a>`:`<a href="https://search.naver.com/search.naver?query=${q}+대표전화" target="_blank" rel="noopener" aria-label="대표전화 찾기">📞</a>`)+
+    `<a href="https://map.kakao.com/link/to/${q},${o.lat},${o.lon}" target="_blank" rel="noopener" aria-label="길찾기">🧭</a>`;
+  L.marker([o.lat,o.lon],{icon:icon('gov','🏛')}).addTo(govLayer).bindPopup(esc(o.name));
+}
+
+/* ---------- 주변업체 ---------- */
+function buildCats(){
+  $('#cats').innerHTML=CATS.map(c=>`<button data-k="${c.k}" aria-pressed="${c.k===S.cat}"><span class="e">${c.e}</span>${c.n}</button>`).join('');
+  $('#cats').querySelectorAll('button').forEach(b=>b.onclick=()=>{S.cat=b.dataset.k;S.shown=20;
+    $('#cats').querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b));renderPOI()});
+}
+async function loadPOI(){
+  const key=S.r;
+  $('#list').innerHTML='<li class="status">주변업체를 불러오는 중…</li>';$('#cnt').textContent='';$('#moreBtn').hidden=true;
+  if(!S.cache[key]){
+    const parts=CATS.slice(1).flatMap(c=>c.t).map(([k,v])=>`nwr(around:${S.r},${S.lat},${S.lon})["${k}"="${v}"];`).join('');
+    try{
+      const els=await overpass(`[out:json][timeout:25];(${parts});out center tags 400;`);
+      S.cache[key]=els.map(e=>({name:e.tags.name||e.tags['name:ko']||'',tags:e.tags,lat:e.lat??e.center?.lat,lon:e.lon??e.center?.lon})).filter(e=>e.lat);
+      S.src='OpenStreetMap';
+    }catch(e){
+      S.cache[key]=await nominatimPOI();S.src='OpenStreetMap(보조)';
+    }
+  }
+  S.items=S.cache[key].map(e=>({...e,cat:catOf(e.tags),d:dist(S.lat,S.lon,e.lat,e.lon)})).filter(e=>e.cat&&e.d<=S.r).sort((a,b)=>a.d-b.d);
+  renderPOI();
+}
+async function nominatimPOI(){ // Overpass가 안 될 때: 업종별 순차 조회(초당 1회)
+  const dLat=S.r/111000,dLon=S.r/(111000*Math.cos(S.lat*Math.PI/180));
+  const vb=`${S.lon-dLon},${S.lat+dLat},${S.lon+dLon},${S.lat-dLat}`;
+  const out=[];const amen=['restaurant','cafe','pharmacy','hospital','clinic','bank','parking','fast_food'];
+  for(const a of amen){
+    try{
+      const r=await fetch(`https://nominatim.openstreetmap.org/search?format=jsonv2&accept-language=ko&limit=40&bounded=1&viewbox=${vb}&amenity=${a}`);
+      (await r.json()).forEach(x=>out.push({name:x.name,tags:{amenity:a},lat:+x.lat,lon:+x.lon,addr:x.display_name}));
+    }catch(e){}
+    await new Promise(r=>setTimeout(r,1100));
+  }
+  return out;
+}
+function renderPOI(){
+  const q=S.q.trim();
+  let arr=S.items.filter(e=>(S.cat==='all'||e.cat.k===S.cat)&&(!q||(e.name||'').includes(q)));
+  $('#cnt').textContent=`반경 ${fmt(S.r)} 안 ${arr.length}건`;$('#srcTag').textContent=S.src;
+  poiLayer.clearLayers();
+  arr.slice(0,150).forEach(e=>L.marker([e.lat,e.lon],{icon:icon('dot')}).addTo(poiLayer).bindPopup(`<b>${esc(e.name||e.cat.n)}</b><br>${fmt(e.d)}`));
+  if(!arr.length){$('#list').innerHTML=`<li class="status">${q?`'${esc(q)}' 검색 결과가 없습니다. 반경을 넓혀 보세요.`:'이 반경에는 등록된 업체가 없습니다. 반경을 넓혀 보세요.'}</li>`;$('#moreBtn').hidden=true;return}
+  $('#list').innerHTML=arr.slice(0,S.shown).map((e,i)=>{
+    const t=e.tags,sub=[t['addr:street']&&(t['addr:street']+' '+(t['addr:housenumber']||'')),t.phone||t['contact:phone'],t.opening_hours].filter(Boolean).join(' · ')||e.cat.n;
+    return `<li><button data-i="${i}"><span class="e">${e.cat.e}</span><span class="n"><b>${esc(e.name||e.cat.n+' (이름 없음)')}</b><small>${esc(sub)}</small></span><span class="d">${fmt(e.d)}</span></button></li>`}).join('');
+  $('#list').querySelectorAll('button').forEach(b=>b.onclick=()=>{const e=arr[+b.dataset.i];
+    map.setView([e.lat,e.lon],18);L.popup().setLatLng([e.lat,e.lon]).setContent(`<b>${esc(e.name||e.cat.n)}</b><br>${fmt(e.d)} · <a target="_blank" rel="noopener" href="https://map.kakao.com/link/to/${encodeURIComponent(e.name||e.cat.n)},${e.lat},${e.lon}">길찾기</a>`).openOn(map);
+    $('#map').scrollIntoView({behavior:'smooth',block:'center'})});
+  $('#moreBtn').hidden=arr.length<=S.shown;
+}
+document.querySelectorAll('.radius button').forEach(b=>b.onclick=()=>{
+  S.r=+b.dataset.r;S.shown=20;document.querySelectorAll('.radius button').forEach(x=>x.setAttribute('aria-pressed',x===b));
+  drawCircle();loadPOI();
+});
+$('#moreBtn').onclick=()=>{S.shown+=20;renderPOI()};
+$('#searchForm').onsubmit=e=>{e.preventDefault();S.q=$('#q').value;S.shown=20;renderPOI()};
+$('#q').addEventListener('input',e=>{if(!e.target.value){S.q='';renderPOI()}});
+buildCats();
+
+/* ---------- 스캐너 ---------- */
+const video=$('#video'),cv=$('#cv'),ctx=cv.getContext('2d',{willReadFrequently:true});
+let stream=null,raf=0,detector=null,busy=false,track=null,torch=false;
+if('BarcodeDetector' in window){try{detector=new BarcodeDetector({formats:['qr_code']})}catch(e){}}
+function scanErr(m){const e=$('#scanErr');e.textContent=m;e.style.display=m?'block':'none'}
+async function openScanner(){
+  $('#scanner').classList.add('on');scanErr('');
+  if(!navigator.mediaDevices?.getUserMedia){scanErr('이 브라우저는 카메라를 지원하지 않습니다. "사진에서 찾기"를 이용해 주세요.');return}
+  if(!isSecureContext){scanErr('카메라는 https 주소에서만 켜집니다. "사진에서 찾기"를 이용해 주세요.');return}
+  try{
+    stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720}},audio:false});
+    video.srcObject=stream;await video.play();
+    track=stream.getVideoTracks()[0];
+    const caps=track.getCapabilities?.()||{};$('#torchBtn').hidden=!caps.torch;
+    loop();
+  }catch(e){
+    scanErr(e.name==='NotAllowedError'?'카메라 권한이 거부되었습니다. 브라우저 설정에서 카메라를 허용하거나 "사진에서 찾기"를 이용해 주세요.':'카메라를 켜지 못했습니다. "사진에서 찾기"를 이용해 주세요.');
+  }
+}
+function closeScanner(){
+  cancelAnimationFrame(raf);
+  if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}
+  video.srcObject=null;torch=false;$('#scanner').classList.remove('on');
+}
+async function decodeFrom(src,w,h){
+  if(detector){try{const r=await detector.detect(src);if(r[0])return r[0].rawValue}catch(e){}}
+  if(window.jsQR){
+    const s=Math.min(1,900/Math.max(w,h));cv.width=Math.round(w*s);cv.height=Math.round(h*s);
+    ctx.drawImage(src,0,0,cv.width,cv.height);
+    const d=ctx.getImageData(0,0,cv.width,cv.height);
+    const r=jsQR(d.data,d.width,d.height,{inversionAttempts:'attemptBoth'});if(r)return r.data;
+  }
+  return null;
+}
+async function loop(){
+  if(!stream)return;
+  if(!busy&&video.readyState>=2){
+    busy=true;
+    const t=await decodeFrom(video,video.videoWidth,video.videoHeight);
+    busy=false;
+    if(t){navigator.vibrate?.(80);closeScanner();showResult(parseQR(t));return}
+  }
+  raf=requestAnimationFrame(loop);
+}
+$('#torchBtn').onclick=async()=>{try{torch=!torch;await track.applyConstraints({advanced:[{torch}]})}catch(e){toast('손전등을 켤 수 없습니다')}};
+$('#fileIn').onchange=async e=>{
+  const f=e.target.files[0];if(!f)return;e.target.value='';
+  const img=new Image();img.src=URL.createObjectURL(f);
+  try{await img.decode()}catch(_){scanErr('사진을 열지 못했습니다');return}
+  const t=await decodeFrom(img,img.naturalWidth,img.naturalHeight);
+  URL.revokeObjectURL(img.src);
+  if(t){closeScanner();showResult(parseQR(t))}else scanErr('사진에서 QR을 찾지 못했습니다. QR이 크고 선명하게 나온 사진으로 다시 해 주세요.');
+};
+$('#heroBtn').onclick=openScanner;
+$('#closeScan').onclick=closeScanner;
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeScanner();closeSheet()}});
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&stream)closeScanner()});
+
+/* ---------- 직접 입력 / 예시 ---------- */
+const sheet=$('#sheet');
+function openSheet(){sheet.classList.add('on');setTimeout(()=>$('#manualIn').focus(),200)}
+function closeSheet(){sheet.classList.remove('on')}
+$('#manualBtn').onclick=openSheet;$('#sheetNo').onclick=closeSheet;
+function goManual(){const v=$('#manualIn').value.trim();if(!v)return;closeSheet();showResult(parseQR(v))}
+$('#sheetGo').onclick=goManual;$('#manualIn').addEventListener('keydown',e=>{if(e.key==='Enter')goManual()});
+$('#demoBtn').onclick=()=>showResult(parseQR('https://map.kakao.com/?q='+encodeURIComponent('부산 영도구 와치로 19')));
+
+/* 주소창에 ?qr=... 또는 ?q=... 로 열면 바로 표시 */
+const sp=new URLSearchParams(location.search);
+if(sp.get('qr'))showResult(parseQR(sp.get('qr')));else if(sp.get('q'))showResult(parseQR(sp.get('q')));
+})();
+</script>
+</body>
+</html>
